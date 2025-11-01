@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 # Script: lib-update-ink.sh
-# Description: Update inkcpp submodule to latest main/master branch
+# Description: Update inkcpp submodule to latest stable tag release
 # Usage: ./scripts/lib-update-ink.sh
 
 set -e  # Exit on error
@@ -35,7 +35,7 @@ show_help() {
     cat << EOF
 Usage: $(basename "$0")
 
-Update inkcpp submodule to latest main/master branch.
+Update inkcpp submodule to latest stable tag release.
 
 Options:
   -h, --help   Show this help message
@@ -65,39 +65,42 @@ fi
 
 log_info "Updating inkcpp submodule..."
 
-# Get current commit before update
-OLD_COMMIT=$(cd "$SUBMODULE_PATH" && git rev-parse --short HEAD)
-
-# Determine default branch (main or master)
-DEFAULT_BRANCH=$(cd "$SUBMODULE_PATH" && git remote show origin | grep 'HEAD branch' | cut -d' ' -f5)
-if [ -z "$DEFAULT_BRANCH" ]; then
-    # Fallback: try main first, then master
-    if (cd "$SUBMODULE_PATH" && git show-ref --verify --quiet refs/heads/main); then
-        DEFAULT_BRANCH="main"
-    elif (cd "$SUBMODULE_PATH" && git show-ref --verify --quiet refs/heads/master); then
-        DEFAULT_BRANCH="master"
-    else
-        log_error "Could not determine default branch for inkcpp"
-        exit 1
-    fi
+# Get current tag (if on a tag) or commit
+OLD_TAG=$(cd "$SUBMODULE_PATH" && git describe --tags --exact-match 2>/dev/null || echo "")
+if [ -z "$OLD_TAG" ]; then
+    OLD_TAG=$(cd "$SUBMODULE_PATH" && git rev-parse --short HEAD)
+    log_info "Currently on commit: $OLD_TAG (not a tagged release)"
+else
+    log_info "Currently on tag: $OLD_TAG"
 fi
 
-log_info "Using branch: $DEFAULT_BRANCH"
+# Fetch all tags from remote
+log_info "Fetching tags from remote..."
+(cd "$SUBMODULE_PATH" && git fetch --tags)
 
-# Update submodule
+# Find latest semantic version tag (v0.1.x, v0.2.x, etc.)
+LATEST_TAG=$(cd "$SUBMODULE_PATH" && git tag -l 'v*' | sort -V | tail -n 1)
+
+if [ -z "$LATEST_TAG" ]; then
+    log_error "No version tags found in inkcpp repository"
+    exit 1
+fi
+
+log_info "Latest available tag: $LATEST_TAG"
+
+# Checkout the latest tag
 (
     cd "$SUBMODULE_PATH"
-    git checkout "$DEFAULT_BRANCH"
-    git pull origin "$DEFAULT_BRANCH"
+    git checkout "$LATEST_TAG"
 )
 
-# Get new commit after update
-NEW_COMMIT=$(cd "$SUBMODULE_PATH" && git rev-parse --short HEAD)
+# Get new tag after update
+NEW_TAG=$(cd "$SUBMODULE_PATH" && git describe --tags --exact-match 2>/dev/null)
 
-if [ "$OLD_COMMIT" == "$NEW_COMMIT" ]; then
-    log_info "Already up to date ($OLD_COMMIT)"
+if [ "$OLD_TAG" == "$NEW_TAG" ]; then
+    log_info "Already on latest tag ($OLD_TAG)"
 else
-    log_success "Updated: $OLD_COMMIT -> $NEW_COMMIT"
+    log_success "Updated: $OLD_TAG -> $NEW_TAG"
 fi
 
 log_success "InkCPP submodule updated!"

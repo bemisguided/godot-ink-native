@@ -8,18 +8,6 @@ Currently no critical bugs blocking core functionality.
 
 ## Important Features
 
-### 1. Pin inkcpp Dependency to Specific Tag
-**Priority:** High
-**Status:** To Investigate
-
-- **Issue:** Currently using inkcpp v0.1.9 as a git submodule, but .gitmodules doesn't explicitly pin to a tag/branch
-- **Location:** `.gitmodules` lines 1-3
-- **Action Items:**
-  - [ ] Verify if submodule is already pinned to v0.1.9 tag
-  - [ ] If not pinned, update `.gitmodules` to reference specific tag
-  - [ ] Document in README.md how to update inkcpp version
-- **Rationale:** Ensures reproducible builds and prevents unexpected breakage from upstream changes
-
 ### 2. Support .json Extension for Ink Stories
 **Priority:** Medium
 **Status:** Not Started

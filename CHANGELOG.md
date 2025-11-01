@@ -61,12 +61,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - LICENSE - MIT license
 
 ### Technical Details
-- Wraps inkcpp library (JBenda)
+- Wraps inkcpp library v0.1.9 (JBenda)
 - Uses godot-cpp 4.4+ bindings
 - Supports Godot 4.4 and 4.5
 - Automatic Ink JSON to binary compilation
 - GDScript-friendly API with snake_case naming
 - RefCounted memory management
+- Tag-based version pinning for inkcpp dependency
 
 ### Known Limitations
 - Ink Lists not yet wrapped (use simple types)

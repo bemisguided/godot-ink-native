@@ -13,16 +13,18 @@ This directory contains convenience scripts for common development tasks. These 
 
 ## Scripts Overview
 
-| Script                | Description                                              |
-| --------------------- | -------------------------------------------------------- |
-| `build-version.sh`    | Clean, configure, and build for a specific Godot version |
-| `release-version.sh`  | Build and create release package for a specific version  |
-| `release-all.sh`      | Build and release for all supported Godot versions       |
-| `lib-update-godot.sh` | Update godot-cpp submodules to latest stable branches    |
-| `lib-update-ink.sh`   | Update inkcpp submodule to latest main/master branch     |
-| `lib-update-all.sh`   | Update all dependency submodules                         |
-| `test.sh`             | Run demo project tests using Godot                       |
-| `setup-demo.sh`       | Extract release package into demo/addons/ink             |
+| Script                 | Description                                              |
+| ---------------------- | -------------------------------------------------------- |
+| `build-version.sh`     | Clean, configure, and build for a specific Godot version |
+| `release-version.sh`   | Build and create release package for a specific version  |
+| `release-all.sh`       | Build and release for all supported Godot versions       |
+| `lib-update-godot.sh`  | Update godot-cpp submodules to latest stable branches    |
+| `lib-update-ink.sh`    | Update inkcpp submodule to latest stable tag release     |
+| `lib-update-all.sh`    | Update all dependency submodules                         |
+| `lib-show-versions.sh` | Display current versions of all dependency submodules    |
+| `lib-pin-ink.sh`       | Pin inkcpp submodule to a specific tag version           |
+| `test-run.sh`          | Run demo project tests using Godot                       |
+| `test-setup.sh`        | Extract release package into demo/addons/ink             |
 
 ## Detailed Usage
 
@@ -128,28 +130,29 @@ git commit -m "Update godot-cpp submodules"
 
 ### `lib-update-ink.sh`
 
-Update inkcpp submodule to the latest main or master branch.
+Update inkcpp submodule to the latest stable tag release.
 
 ```bash
 # Syntax
 ./scripts/lib-update-ink.sh
 
 # Example
-./scripts/lib-update-ink.sh  # Update inkcpp to latest
+./scripts/lib-update-ink.sh  # Update inkcpp to latest tag
 ```
 
 **What it does:**
-1. Automatically detects default branch (main or master)
-2. Updates `libs/inkcpp` to latest commit on default branch
-3. Reports old and new commit hashes
-4. Indicates if already up to date
+1. Fetches all tags from remote
+2. Finds latest semantic version tag (v0.1.x, v0.2.x, etc.)
+3. Checks out the latest tag
+4. Reports old and new tag versions
+5. Indicates if already on latest tag
 
-**Note:** Same as godot updates, you need to commit the changes:
+**Note:** This uses tag-based versioning for stable releases. Same as godot updates, you need to commit the changes:
 
 ```bash
 ./scripts/lib-update-ink.sh
 git add libs/inkcpp
-git commit -m "Update inkcpp submodule"
+git commit -m "Update inkcpp to v0.1.10"
 ```
 
 ### `lib-update-all.sh`
@@ -178,7 +181,74 @@ git add libs/
 git commit -m "Update all dependency submodules"
 ```
 
-### `test.sh`
+### `lib-show-versions.sh`
+
+Display current pinned versions of all dependency submodules.
+
+```bash
+# Syntax
+./scripts/lib-show-versions.sh
+
+# Example
+./scripts/lib-show-versions.sh  # Show all dependency versions
+```
+
+**What it does:**
+1. Shows current commit/branch for godot-cpp-4.4 and godot-cpp-4.5
+2. Shows current tag for inkcpp (or warns if not on a tag)
+3. Uses color-coded output for easy reading
+
+**Example output:**
+```
+========================================
+Dependency Submodule Versions
+========================================
+
+Godot-CPP 4.4: e4b7c25 (branch: 4.4)
+Godot-CPP 4.5: abe9457 (branch: 4.5)
+
+InkCPP: v0.1.9 (tag)
+
+========================================
+```
+
+### `lib-pin-ink.sh`
+
+Pin inkcpp submodule to a specific tag version.
+
+```bash
+# Syntax
+./scripts/lib-pin-ink.sh <tag>
+
+# Examples
+./scripts/lib-pin-ink.sh v0.1.9   # Pin to v0.1.9
+./scripts/lib-pin-ink.sh v0.1.8   # Rollback to v0.1.8
+```
+
+**Arguments:**
+- `tag` - Version tag to pin to (e.g., v0.1.9, v0.1.8)
+
+**What it does:**
+1. Fetches all tags from remote
+2. Validates the specified tag exists
+3. Checks out the specified tag
+4. Reports old and new versions
+5. Reminds you to commit the change
+
+**Use cases:**
+- Pin to a specific stable version for testing
+- Rollback to an older version if needed
+- Override automatic update from `lib-update-ink.sh`
+
+**Note:** Remember to commit the submodule change:
+
+```bash
+./scripts/lib-pin-ink.sh v0.1.8
+git add libs/inkcpp
+git commit -m "Pin inkcpp to v0.1.8"
+```
+
+### `test-run.sh`
 
 Run the demo project tests using Godot.
 

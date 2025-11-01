@@ -27,8 +27,10 @@ Quick reference guide for AI assistants working on godot-ink-native.
 
 **Dependency Management:**
 - `./scripts/lib-update-godot.sh` - Update godot-cpp submodules to latest stable branches
-- `./scripts/lib-update-ink.sh` - Update inkcpp submodule to latest main/master
+- `./scripts/lib-update-ink.sh` - Update inkcpp submodule to latest stable tag
 - `./scripts/lib-update-all.sh` - Update all dependency submodules
+- `./scripts/lib-show-versions.sh` - Display current versions of all submodules
+- `./scripts/lib-pin-ink.sh <tag>` - Pin inkcpp to a specific tag version
 
 ### Permission Model
 
@@ -112,7 +114,43 @@ public:
 - Document parameters: `@param name Description`
 - Document returns: `@return Description`
 
-## 3. Project Structure
+## 3. Dependency Versioning
+
+### Version Pinning Strategy
+
+The project uses **different versioning strategies** for different dependencies:
+
+**godot-cpp (Branch Tracking):**
+- Tracks stable **branches**: `4.4` and `4.5`
+- These branches receive backported fixes from Godot upstream
+- Updates pull latest commits from the branch
+- Location: `libs/godot/godot-cpp-4.4/` and `libs/godot/godot-cpp-4.5/`
+- Update: `./scripts/lib-update-godot.sh`
+
+**inkcpp (Tag Pinning):**
+- Pins to stable **semantic version tags**: `v0.1.9`, `v0.1.8`, etc.
+- Current version: **v0.1.9**
+- Tags represent stable releases
+- Master branch may contain unstable commits
+- Location: `libs/inkcpp/`
+- Update to latest: `./scripts/lib-update-ink.sh`
+- Pin to specific: `./scripts/lib-pin-ink.sh v0.1.9`
+
+**Why Different Strategies?**
+- godot-cpp branches are maintained for stability (like Godot itself)
+- inkcpp uses tags for releases, with active development on master
+- This ensures both stability and reproducibility
+
+**Checking Versions:**
+```bash
+./scripts/lib-show-versions.sh
+# Output:
+# Godot-CPP 4.4: e4b7c25 (branch: 4.4)
+# Godot-CPP 4.5: abe9457 (branch: 4.5)
+# InkCPP: v0.1.9 (tag)
+```
+
+## 4. Project Structure
 
 ### Critical Paths
 ```
