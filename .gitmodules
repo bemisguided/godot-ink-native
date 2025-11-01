@@ -1,0 +1,11 @@
+[submodule "libs/inkcpp"]
+	path = libs/inkcpp
+	url = https://github.com/JBenda/inkcpp
+[submodule "libs/godot/godot-cpp-4.4"]
+	path = libs/godot/godot-cpp-4.4
+	url = https://github.com/godotengine/godot-cpp.git
+	branch = 4.4
+[submodule "libs/godot/godot-cpp-4.5"]
+	path = libs/godot/godot-cpp-4.5
+	url = https://github.com/godotengine/godot-cpp.git
+	branch = 4.5

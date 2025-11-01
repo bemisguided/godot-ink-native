@@ -1,0 +1,47 @@
+# Build artifacts
+*.o
+*.os
+*.obj
+*.so
+*.dll
+*.dylib
+*.framework
+*.a
+*.lib
+*.exp
+*.pdb
+*.ilk
+
+# Build directories
+/demo/addons
+/demo/addons/*
+/build/
+
+# Distribution packages
+/release/
+
+# CMake
+CMakeCache.txt
+CMakeFiles/
+cmake_install.cmake
+Makefile
+*.cmake
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Godot
+.import/
+*.import
+.godot/
+
+# Claude
+.claude/
