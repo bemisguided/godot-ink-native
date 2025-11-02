@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- Support for multiple file extensions: `.json`, `.ink.json`, `.inkj`, and `.inkb`
+  - Improved compatibility with standard Ink workflow
+  - No need to rename inklecate output files
+
 ### Planned
 - InkList wrapper for Ink list operations
 - External function binding (call GDScript from Ink)

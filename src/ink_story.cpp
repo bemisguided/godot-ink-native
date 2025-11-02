@@ -92,7 +92,8 @@ bool InkStory::load_story(const String& story_path) {
 	String extension = story_path.get_extension().to_lower();
 	String path_to_load = story_path;
 
-	if (extension == "inkj") {
+	// Check for JSON formats that need compilation (.inkj or .json)
+	if (extension == "inkj" || extension == "json") {
 		// Compile .inkj to .inkb
 		// Generate binary path by replacing extension
 		String binary_path = story_path.get_basename() + ".inkb";
@@ -155,7 +156,7 @@ bool InkStory::load_story(const String& story_path) {
 	}
 
 	// Unsupported file extension
-	ERR_PRINT(String("InkStory: Unsupported file extension '") + extension + String("'. Use .inkj or .inkb files."));
+	ERR_PRINT(String("InkStory: Unsupported file extension '") + extension + String("'. Use .json, .ink.json, .inkj, or .inkb files."));
 	return false;
 }
 

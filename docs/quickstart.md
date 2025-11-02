@@ -175,10 +175,17 @@ if story.choose_path_string("chapter2.intro"):
 ### InkStory Class
 
 #### Loading Methods
-- `bool load_story_json(String json_content)` - Load and compile JSON story
-- `bool load_story_binary(PackedByteArray data)` - Load pre-compiled binary
+- `bool load_story(String file_path)` - Load story from file (supports `.json`, `.ink.json`, `.inkj`, `.inkb`)
+- `bool load_story_json(String json_content)` - Load and compile JSON story from string
+- `bool load_story_binary(PackedByteArray data)` - Load pre-compiled binary from memory
 - `void reset()` - Reset story to beginning
 - `bool is_loaded()` - Check if story is loaded
+
+**Supported File Formats:**
+- `.ink.json` - Standard inklecate output (recommended)
+- `.json` - Plain JSON format
+- `.inkj` - Custom JSON format
+- `.inkb` - Pre-compiled binary format
 
 #### Execution Methods
 - `String continue_story()` - Get next line

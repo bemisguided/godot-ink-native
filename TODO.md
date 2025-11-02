@@ -8,19 +8,6 @@ Currently no critical bugs blocking core functionality.
 
 ## Important Features
 
-### 2. Support .json Extension for Ink Stories
-**Priority:** Medium
-**Status:** Not Started
-
-- **Issue:** Extension only recognizes `.inkj` and `.inkb` extensions, but standard Ink export uses `.json` or `.ink.json`
-- **Location:** `src/ink_story.cpp:92` - extension check
-- **Action Items:**
-  - [ ] Add support for `.json` extension (treat as `.inkj`)
-  - [ ] Add support for `.ink.json` extension
-  - [ ] Update documentation with supported formats
-  - [ ] Add test cases for different extensions
-- **Rationale:** Better compatibility with standard Ink workflow
-
 ### 3. Integrate inklecate into Build System
 **Priority:** Medium
 **Status:** Design Phase

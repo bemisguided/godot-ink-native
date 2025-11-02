@@ -45,6 +45,12 @@ Compile your `.ink` file to JSON using [inklecate](https://github.com/inkle/ink)
 inklecate story.ink -o story.ink.json
 ```
 
+The extension supports multiple file formats:
+- `.ink.json` - Standard inklecate output (recommended)
+- `.json` - Plain JSON format
+- `.inkj` - Custom JSON format
+- `.inkb` - Pre-compiled binary format
+
 ### 2. Load and Run in GDScript
 
 ```gdscript
@@ -262,6 +268,7 @@ These features are planned for future releases.
 
 - Godot 4.4 or later
 - Ink stories in JSON format (compiled with inklecate)
+  - Supported formats: `.ink.json`, `.json`, `.inkj`, or `.inkb`
 
 ## Contributing
 
