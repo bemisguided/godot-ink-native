@@ -20,6 +20,9 @@
 # Distribution packages
 /release/
 
+# Installed binaries
+/bin/
+
 # CMake
 CMakeCache.txt
 CMakeFiles/
@@ -45,3 +48,7 @@ Thumbs.db
 
 # Claude
 .claude/
+
+# Compiled Ink files
+*.ink.json
+*.inkb

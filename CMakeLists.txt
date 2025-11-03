@@ -49,6 +49,96 @@ else()
 endif()
 
 # ==============================================================================
+# Inklecate Binary Download
+# ==============================================================================
+
+# Configuration options
+set(INKLECATE_VERSION "v.1.2.0" CACHE STRING "Inklecate version to download (e.g., v.1.2.0)")
+option(INKLECATE_AUTO_DOWNLOAD "Automatically download inklecate binary" ON)
+
+if(INKLECATE_AUTO_DOWNLOAD)
+    # Determine platform-specific download name
+    if(GODOT_PLATFORM STREQUAL "linux")
+        set(INKLECATE_PLATFORM "linux")
+        set(INKLECATE_EXECUTABLE "inklecate")
+    elseif(GODOT_PLATFORM STREQUAL "windows")
+        set(INKLECATE_PLATFORM "windows")
+        set(INKLECATE_EXECUTABLE "inklecate.exe")
+    elseif(GODOT_PLATFORM STREQUAL "macos")
+        set(INKLECATE_PLATFORM "mac")
+        set(INKLECATE_EXECUTABLE "inklecate")
+    endif()
+
+    # Set paths
+    set(INKLECATE_DIR "${CMAKE_SOURCE_DIR}/bin")
+    set(INKLECATE_ZIP "${INKLECATE_DIR}/inklecate_${INKLECATE_PLATFORM}.zip")
+    set(INKLECATE_PATH "${INKLECATE_DIR}/${INKLECATE_EXECUTABLE}")
+
+    # Download URL
+    set(INKLECATE_URL "https://github.com/inkle/ink/releases/download/${INKLECATE_VERSION}/inklecate_${INKLECATE_PLATFORM}.zip")
+
+    # Check if inklecate already exists
+    if(NOT EXISTS "${INKLECATE_PATH}")
+        message(STATUS "Downloading inklecate ${INKLECATE_VERSION} for ${INKLECATE_PLATFORM}...")
+
+        # Create bin directory
+        file(MAKE_DIRECTORY "${INKLECATE_DIR}")
+
+        # Download the zip file
+        file(DOWNLOAD
+            "${INKLECATE_URL}"
+            "${INKLECATE_ZIP}"
+            SHOW_PROGRESS
+            STATUS DOWNLOAD_STATUS
+        )
+
+        # Check download status
+        list(GET DOWNLOAD_STATUS 0 STATUS_CODE)
+        list(GET DOWNLOAD_STATUS 1 STATUS_MESSAGE)
+
+        if(NOT STATUS_CODE EQUAL 0)
+            message(WARNING "Failed to download inklecate: ${STATUS_MESSAGE}")
+            message(WARNING "URL: ${INKLECATE_URL}")
+            message(WARNING "You can manually download and extract it to: ${INKLECATE_DIR}")
+        else()
+            message(STATUS "Download complete. Extracting...")
+
+            # Extract the zip file
+            execute_process(
+                COMMAND ${CMAKE_COMMAND} -E tar xf "${INKLECATE_ZIP}"
+                WORKING_DIRECTORY "${INKLECATE_DIR}"
+                RESULT_VARIABLE EXTRACT_RESULT
+            )
+
+            if(NOT EXTRACT_RESULT EQUAL 0)
+                message(WARNING "Failed to extract inklecate archive")
+            else()
+                # Set executable permissions on Unix platforms
+                if(NOT GODOT_PLATFORM STREQUAL "windows")
+                    execute_process(
+                        COMMAND chmod +x "${INKLECATE_PATH}"
+                        RESULT_VARIABLE CHMOD_RESULT
+                    )
+                    if(NOT CHMOD_RESULT EQUAL 0)
+                        message(WARNING "Failed to set executable permissions on inklecate")
+                    endif()
+                endif()
+
+                # Clean up zip file
+                file(REMOVE "${INKLECATE_ZIP}")
+
+                message(STATUS "✅ Inklecate ${INKLECATE_VERSION} installed to: ${INKLECATE_PATH}")
+            endif()
+        endif()
+    else()
+        message(STATUS "Using existing inklecate binary: ${INKLECATE_PATH}")
+    endif()
+
+    # Store the path for use in future build steps
+    set(INKLECATE_BINARY "${INKLECATE_PATH}" CACHE FILEPATH "Path to inklecate binary" FORCE)
+endif()
+
+# ==============================================================================
 # Build InkCPP Library
 # ==============================================================================
 
@@ -182,6 +272,20 @@ add_custom_target(release
         $<IF:$<STREQUAL:${GODOT_PLATFORM},macos>,copy_directory,copy>
         "$<IF:$<STREQUAL:${GODOT_PLATFORM},macos>,$<TARGET_BUNDLE_DIR:${PROJECT_NAME}>,$<TARGET_FILE:${PROJECT_NAME}>>"
         "${CMAKE_BINARY_DIR}/package/bin/$<TARGET_FILE_NAME:${PROJECT_NAME}>"
+
+    # Copy inklecate binary if available (for GDInkCompiler tool)
+    COMMAND ${CMAKE_COMMAND} -E echo "Checking for inklecate binary..."
+    COMMAND ${CMAKE_COMMAND} -E copy_if_different
+        "${CMAKE_SOURCE_DIR}/bin/${INKLECATE_EXECUTABLE}"
+        "${CMAKE_BINARY_DIR}/package/bin/${INKLECATE_EXECUTABLE}"
+
+    # Copy DLLs if they exist (Windows and macOS)
+    COMMAND ${CMAKE_COMMAND} -E copy_if_different
+        "${CMAKE_SOURCE_DIR}/bin/ink_compiler.dll"
+        "${CMAKE_BINARY_DIR}/package/bin/ink_compiler.dll"
+    COMMAND ${CMAKE_COMMAND} -E copy_if_different
+        "${CMAKE_SOURCE_DIR}/bin/ink-engine-runtime.dll"
+        "${CMAKE_BINARY_DIR}/package/bin/ink-engine-runtime.dll"
 
     # Create zip archive with platform-specific naming
     # Archive contents of package directory, not the directory itself

@@ -9,6 +9,12 @@ func _ready():
   print("==========================================")
   print("")
 
+  # Compile test story before running tests
+  if not _compile_test_story():
+    print("❌ Failed to compile test story - aborting tests")
+    get_tree().quit(1)
+    return
+
   test_story_loading()
   test_story_continuation()
   test_choices()
@@ -29,8 +35,8 @@ func test_story_loading():
   var story = InkStory.new()
   assert(story != null, "Failed to create InkStory")
   assert(not story.is_loaded(), "Story should not be loaded yet")
-  var loaded = story.load_story("res://examples/hello.inkj")
-  assert(loaded, "Failed to load story from .inkj file")
+  var loaded = story.load_story("res://examples/hello.ink.json")
+  assert(loaded, "Failed to load story from .ink.json file")
   assert(story.is_loaded(), "Story should be loaded")
   print("  ✓ Story loaded successfully")
   print("")
@@ -38,7 +44,7 @@ func test_story_loading():
 func test_story_continuation():
   print("[TEST] Story Continuation")
   var story = InkStory.new()
-  story.load_story("res://examples/hello.inkj")
+  story.load_story("res://examples/hello.ink.json")
   assert(story.can_continue(), "Story should have content")
   var text = story.continue_story()
   print("  Story text: '%s'" % story.get_current_text())
@@ -50,7 +56,7 @@ func test_story_continuation():
 func test_choices():
   print("[TEST] Choices")
   var story = InkStory.new()
-  story.load_story("res://examples/hello.inkj")
+  story.load_story("res://examples/hello.ink.json")
   while story.can_continue():
     story.continue_story()
   var choices = story.get_current_choices()
@@ -69,7 +75,7 @@ func test_choices():
 func test_tags():
   print("[TEST] Tags")
   var story = InkStory.new()
-  story.load_story("res://examples/hello.inkj")
+  story.load_story("res://examples/hello.ink.json")
   story.continue_story()
   var tags = story.get_current_tags()
   print("  Found %d tag(s): %s" % [tags.size(), tags])
@@ -82,7 +88,7 @@ func test_tags():
 func test_variables():
   print("[TEST] Variables")
   var story = InkStory.new()
-  story.load_story("res://examples/hello.inkj")
+  story.load_story("res://examples/hello.ink.json")
   story.set_variable("test_var", 42)
   var value = story.get_variable("test_var")
   print("  Set test_var = 42, got back: %s" % str(value))
@@ -91,3 +97,15 @@ func test_variables():
   else:
     print("  ⚠ Variable value mismatch (expected 42, got %s)" % str(value))
   print("")
+
+func _compile_test_story() -> bool:
+  print("[SETUP] Compiling test story...")
+  var success = GDInkCompiler.compile("res://examples/hello.ink")
+  if success:
+    print("  ✅ Test story compiled successfully")
+    print("")
+    return true
+  else:
+    print("  ❌ Compilation failed")
+    print("")
+    return false
