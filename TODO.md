@@ -8,42 +8,8 @@ Currently no critical bugs blocking core functionality.
 
 ## Important Features
 
-### 3. Integrate inklecate into Build System
-**Priority:** Medium
-**Status:** Design Phase
-
-- **Issue:** Users must manually compile `.ink` → `.ink.json` using external inklecate tool
-- **Location:** Build system (CMakeLists.txt) and potentially addon
-- **Options to Consider:**
-  - **Option A:** Bundle pre-compiled inklecate binaries in releases (simplest for users)
-  - **Option B:** Add inklecate as build dependency using CMake FetchContent/ExternalProject
-  - **Option C:** Include inklecate in addon package for runtime compilation
-- **Action Items:**
-  - [ ] Research inklecate distribution/licensing
-  - [ ] Evaluate cross-platform binary distribution (Windows, Linux, macOS, ARM)
-  - [ ] Decide on integration approach
-  - [ ] Implement chosen solution
-  - [ ] Update documentation
-- **Rationale:** Streamlines workflow, reduces external dependencies for users
-
 ## Code Quality & Refactoring
 
-### 4. Refactor InkStory::load_story() Method
-**Priority:** Medium
-**Status:** Not Started
-
-- **Issue:** Current implementation has nested conditionals and duplicated code
-- **Location:** `src/ink_story.cpp:90-149`
-- **Problems:**
-  - Duplicated `ProjectSettings::globalize_path()` calls
-  - Nested if/else for extension handling
-  - Mixed concerns (path resolution, compilation, loading)
-- **Action Items:**
-  - [ ] Extract path resolution helper method
-  - [ ] Consider separate methods: `load_inkj()`, `load_inkb()`, `load_json()`
-  - [ ] Simplify main `load_story()` to dispatch to appropriate loader
-  - [ ] Add inline documentation
-- **Rationale:** Improves maintainability, readability, and testability
 
 ### 5. DRY Pass - Eliminate Code Duplication
 **Priority:** Low
@@ -115,3 +81,4 @@ Currently no critical bugs blocking core functionality.
 - ✅ Stream-based JSON compilation implemented
 - ✅ GDExtension editor-first workflow documented
 - ✅ Demo tests updated and functional
+- ✅ Refactored InkStory::load_story() method with helper functions (src/ink_story.cpp:100-216)

@@ -87,76 +87,131 @@ void InkStory::_update_choices() {
 	}
 }
 
+// ===== Story Loading Helper Methods =====
+
+/**
+ * @brief Resolve a Godot resource path to a filesystem path
+ *
+ * Converts res:// URIs to absolute filesystem paths using ProjectSettings.
+ *
+ * @param res_path The resource path to resolve
+ * @return Resolved filesystem path, or empty string on error
+ */
+String InkStory::_resolve_resource_path(const String& res_path) {
+	ProjectSettings* settings = ProjectSettings::get_singleton();
+	if (!settings) {
+		ERR_PRINT("InkStory: Failed to get ProjectSettings singleton");
+		return String();
+	}
+
+	String fs_path = settings->globalize_path(res_path);
+	if (fs_path.is_empty()) {
+		ERR_PRINT(String("InkStory: Failed to resolve path: ") + res_path);
+		return String();
+	}
+
+	return fs_path;
+}
+
+/**
+ * @brief Load an Ink binary story file (.inkb)
+ *
+ * Handles cleanup of existing story, loads binary from filesystem,
+ * and initializes globals and runner.
+ *
+ * @param binary_path Path to .inkb file (res:// or filesystem path)
+ * @return true on success, false on error
+ */
+bool InkStory::_load_binary_story(const String& binary_path) {
+	// Resolve path
+	String fs_path = _resolve_resource_path(binary_path);
+	if (fs_path.is_empty()) {
+		return false;
+	}
+
+	// Clean up existing story
+	if (_story) {
+		delete _story;
+		_story = nullptr;
+		_runner = ink::runtime::runner();
+		_globals = ink::runtime::globals();
+	}
+
+	// Load story from binary file
+	_story = ink::runtime::story::from_file(fs_path.utf8().get_data());
+
+	if (!_story) {
+		ERR_PRINT(String("InkStory: Failed to load story from: ") + binary_path);
+		return false;
+	}
+
+	// Create globals and runner
+	_globals = _story->new_globals();
+	_runner = _story->new_runner(_globals);
+
+	if (!_runner) {
+		ERR_PRINT("InkStory: Failed to create story runner");
+		return false;
+	}
+
+	// Update initial choices
+	_update_choices();
+
+	return true;
+}
+
+/**
+ * @brief Compile JSON story to binary and load it
+ *
+ * Compiles .json/.inkj files to .inkb format using InkCompiler,
+ * then loads the resulting binary.
+ *
+ * @param json_path Path to .json or .inkj file
+ * @return true on success, false on error
+ */
+bool InkStory::_compile_and_load_json(const String& json_path) {
+	// Generate binary path by replacing extension
+	String binary_path = json_path.get_basename() + ".inkb";
+
+	// Compile using InkCompiler
+	if (!InkCompiler::compile_json_file(json_path, binary_path)) {
+		ERR_PRINT(String("InkStory: Failed to compile story: ") + json_path);
+		return false;
+	}
+
+	// Load the compiled binary
+	return _load_binary_story(binary_path);
+}
+
+/**
+ * @brief Load an Ink story from file
+ *
+ * Supports multiple file formats:
+ * - .json, .inkj: Compiled to .inkb then loaded
+ * - .inkb: Loaded directly
+ *
+ * The method automatically handles format detection and dispatch to
+ * appropriate loading helpers.
+ *
+ * @param story_path Path to story file (supports res:// URIs)
+ * @return true on success, false on error
+ */
 bool InkStory::load_story(const String& story_path) {
-	// Get file extension
+	// Detect file format
 	String extension = story_path.get_extension().to_lower();
-	String path_to_load = story_path;
 
-	// Check for JSON formats that need compilation (.inkj or .json)
-	if (extension == "inkj" || extension == "json") {
-		// Compile .inkj to .inkb
-		// Generate binary path by replacing extension
-		String binary_path = story_path.get_basename() + ".inkb";
-
-		// Compile using InkCompiler
-		if (!InkCompiler::compile_json_file(story_path, binary_path)) {
-			ERR_PRINT(String("InkStory: Failed to compile story: ") + story_path);
-			return false;
-		}
-
-		// Now load the compiled binary
-		path_to_load = binary_path;
-		extension = "inkb";
+	// Route to appropriate loader
+	if (extension == "json" || extension == "inkj") {
+		// JSON formats require compilation
+		return _compile_and_load_json(story_path);
+	} else if (extension == "inkb") {
+		// Binary format loads directly
+		return _load_binary_story(story_path);
 	}
 
-	if (extension == "inkb") {
-		// Load binary file
-		ProjectSettings* settings = ProjectSettings::get_singleton();
-		if (!settings) {
-			ERR_PRINT("InkStory: Failed to get ProjectSettings singleton");
-			return false;
-		}
-
-		// Convert res:// path to filesystem path
-		String fs_path = settings->globalize_path(path_to_load);
-		if (fs_path.is_empty()) {
-			ERR_PRINT(String("InkStory: Failed to resolve path: ") + story_path);
-			return false;
-		}
-
-		// Clean up existing story
-		if (_story) {
-			delete _story;
-			_story = nullptr;
-			_runner = ink::runtime::runner();
-			_globals = ink::runtime::globals();
-		}
-
-		// Load story from binary file
-		_story = ink::runtime::story::from_file(fs_path.utf8().get_data());
-
-		if (!_story) {
-			ERR_PRINT(String("InkStory: Failed to load story from: ") + story_path);
-			return false;
-		}
-
-		// Create globals and runner
-		_globals = _story->new_globals();
-		_runner = _story->new_runner(_globals);
-
-		if (!_runner) {
-			ERR_PRINT("InkStory: Failed to create story runner");
-			return false;
-		}
-
-		// Update initial choices
-		_update_choices();
-
-		return true;
-	}
-
-	// Unsupported file extension
-	ERR_PRINT(String("InkStory: Unsupported file extension '") + extension + String("'. Use .json, .ink.json, .inkj, or .inkb files."));
+	// Unsupported format
+	ERR_PRINT(String("InkStory: Unsupported file extension '") + extension +
+	          String("'. Use .json, .ink.json, .inkj, or .inkb files."));
 	return false;
 }
 

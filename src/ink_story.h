@@ -63,6 +63,11 @@ private:
 	// Helper methods
 	void _update_choices();
 
+	// Story loading helpers
+	String _resolve_resource_path(const String& res_path);
+	bool _load_binary_story(const String& binary_path);
+	bool _compile_and_load_json(const String& json_path);
+
 protected:
 	static void _bind_methods();
 
