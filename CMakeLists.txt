@@ -234,10 +234,10 @@ target_link_libraries(${PROJECT_NAME} PRIVATE
 # Release Target - Package Addon
 # ==============================================================================
 
-# Configure ink.gdextension with the correct GODOT_VERSION
+# Configure gd-ink-native.gdextension with the correct GODOT_VERSION
 configure_file(
-    "${CMAKE_SOURCE_DIR}/addon/ink.gdextension.in"
-    "${CMAKE_BINARY_DIR}/ink.gdextension"
+    "${CMAKE_SOURCE_DIR}/addon/gd-ink-native.gdextension.in"
+    "${CMAKE_BINARY_DIR}/gd-ink-native.gdextension"
     @ONLY
 )
 
@@ -255,14 +255,14 @@ add_custom_target(release
         "${CMAKE_SOURCE_DIR}/addon"
         "${CMAKE_BINARY_DIR}/package"
 
-    # Copy the configured ink.gdextension file (overwriting the .in template)
+    # Copy the configured gd-ink-native.gdextension file (overwriting the .in template)
     COMMAND ${CMAKE_COMMAND} -E copy
-        "${CMAKE_BINARY_DIR}/ink.gdextension"
-        "${CMAKE_BINARY_DIR}/package/ink.gdextension"
+        "${CMAKE_BINARY_DIR}/gd-ink-native.gdextension"
+        "${CMAKE_BINARY_DIR}/package/gd-ink-native.gdextension"
 
     # Remove the .in template file from the package
     COMMAND ${CMAKE_COMMAND} -E remove
-        "${CMAKE_BINARY_DIR}/package/ink.gdextension.in"
+        "${CMAKE_BINARY_DIR}/package/gd-ink-native.gdextension.in"
 
     # Copy binary
     COMMAND ${CMAKE_COMMAND} -E echo "Copying binary: $<TARGET_FILE_NAME:${PROJECT_NAME}>"

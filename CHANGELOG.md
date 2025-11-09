@@ -56,7 +56,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Demo Project**
   - Example Ink story (`demo/examples/hello.ink.json`)
   - Comprehensive test suite (`demo/tests/test_basic.gd`)
-  - GDExtension configuration (`demo/addons/ink/ink.gdextension`)
+  - GDExtension configuration (`demo/addons/gd-ink-native/gd-ink-native.gdextension`)
 
 - **Documentation**
   - README.md - Project overview and quick start

@@ -1,0 +1,18 @@
+[configuration]
+entry_symbol = "godot_ink_init"
+compatibility_minimum = 4.4
+
+[libraries]
+; Windows
+windows.debug.x86_64 = "res://addons/gd-ink-native/bin/libgodot_ink.@GODOT_VERSION@.windows.template_debug.x86_64.dll"
+windows.release.x86_64 = "res://addons/gd-ink-native/bin/libgodot_ink.@GODOT_VERSION@.windows.template_release.x86_64.dll"
+
+; Linux
+linux.debug.x86_64 = "res://addons/gd-ink-native/bin/libgodot_ink.@GODOT_VERSION@.linux.template_debug.x86_64.so"
+linux.release.x86_64 = "res://addons/gd-ink-native/bin/libgodot_ink.@GODOT_VERSION@.linux.template_release.x86_64.so"
+
+; macOS
+; Note: Plain 'macos' entry needed for editor compatibility
+macos = "res://addons/gd-ink-native/bin/libgodot_ink.@GODOT_VERSION@.macos.template_release.framework"
+macos.debug = "res://addons/gd-ink-native/bin/libgodot_ink.@GODOT_VERSION@.macos.template_debug.framework"
+macos.release = "res://addons/gd-ink-native/bin/libgodot_ink.@GODOT_VERSION@.macos.template_release.framework"

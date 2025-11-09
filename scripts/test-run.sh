@@ -87,8 +87,8 @@ if [ ! -f "demo/project.godot" ]; then
 fi
 
 # Check if addon is installed in demo
-if [ ! -d "demo/addons/ink" ]; then
-    log_warn "Addon not found in demo/addons/ink/"
+if [ ! -d "demo/addons/gd-ink-native" ]; then
+    log_warn "Addon not found in demo/addons/gd-ink-native/"
     log_warn "Run 'scripts/setup-demo.sh' to extract the addon first"
     log_warn ""
 fi

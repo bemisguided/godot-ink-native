@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 # Script: setup-demo.sh
-# Description: Extract latest release package into demo/addons/ink
+# Description: Extract latest release package into demo/addons/gd-ink-native
 # Usage: ./scripts/setup-demo.sh [godot_version]
 
 set -e  # Exit on error
@@ -35,7 +35,7 @@ show_help() {
     cat << EOF
 Usage: $(basename "$0") [godot_version]
 
-Extract the latest release package into demo/addons/ink for testing.
+Extract the latest release package into demo/addons/gd-ink-native for testing.
 
 Arguments:
   godot_version  Godot version to extract (4.4 or 4.5, default: auto-detect)
@@ -112,25 +112,25 @@ if [ ! -d "demo" ]; then
 fi
 
 # Clean existing addon installation
-if [ -d "demo/addons/ink" ]; then
+if [ -d "demo/addons/gd-ink-native" ]; then
     log_info "Removing existing addon installation..."
-    rm -rf demo/addons/ink
+    rm -rf demo/addons/gd-ink-native
 fi
 
 # Ensure demo/addons directory exists
 mkdir -p demo/addons
 
 # Extract package
-log_info "Extracting package to demo/addons/ink..."
-unzip -q "$PACKAGE" -d demo/addons/ink
+log_info "Extracting package to demo/addons/gd-ink-native..."
+unzip -q "$PACKAGE" -d demo/addons/gd-ink-native
 
 # Verify extraction
-if [ -f "demo/addons/ink/ink.gdextension" ]; then
+if [ -f "demo/addons/gd-ink-native/gd-ink-native.gdextension" ]; then
     log_success "Addon extracted successfully!"
 
     # Fix macOS framework extensions (zip extraction strips .framework suffix)
-    if [ -d "demo/addons/ink/bin" ]; then
-        for framework_dir in demo/addons/ink/bin/libgodot_ink.*.macos.*; do
+    if [ -d "demo/addons/gd-ink-native/bin" ]; then
+        for framework_dir in demo/addons/gd-ink-native/bin/libgodot_ink.*.macos.*; do
             if [ -d "$framework_dir" ] && [[ ! "$framework_dir" == *.framework ]]; then
                 log_info "Fixing framework extension: $(basename "$framework_dir")"
                 mv "$framework_dir" "${framework_dir}.framework"
@@ -138,7 +138,7 @@ if [ -f "demo/addons/ink/ink.gdextension" ]; then
         done
 
         # Create debug symlinks if only release builds exist (for development/testing)
-        for release_framework in demo/addons/ink/bin/*.template_release.framework; do
+        for release_framework in demo/addons/gd-ink-native/bin/*.template_release.framework; do
             if [ -d "$release_framework" ]; then
                 debug_framework="${release_framework/template_release/template_debug}"
                 if [ ! -e "$debug_framework" ]; then
@@ -151,7 +151,7 @@ if [ -f "demo/addons/ink/ink.gdextension" ]; then
 
     # Show what was extracted
     log_info "Extracted files:"
-    find demo/addons/ink -type f | sed 's|demo/addons/ink/||' | sed 's/^/  - /'
+    find demo/addons/gd-ink-native -type f | sed 's|demo/addons/gd-ink-native/||' | sed 's/^/  - /'
 
     echo ""
     log_warn "IMPORTANT: First-Time Setup Required"
@@ -163,6 +163,6 @@ if [ -f "demo/addons/ink/ink.gdextension" ]; then
     log_info "After opening the editor once, you can run headless tests:"
     echo "  scripts/test.sh"
 else
-    log_error "Extraction failed: ink.gdextension not found"
+    log_error "Extraction failed: gd-ink-native.gdextension not found"
     exit 1
 fi

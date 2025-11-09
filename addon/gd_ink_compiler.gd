@@ -68,7 +68,7 @@ static func _get_inklecate_path() -> String:
 		executable_name = "inklecate.exe"
 
 	# Path relative to addon
-	var inklecate_res_path = "res://addons/ink/bin/" + executable_name
+	var inklecate_res_path = "res://addons/gd-ink-native/bin/" + executable_name
 	var inklecate_fs_path = ProjectSettings.globalize_path(inklecate_res_path)
 
 	# Check if binary exists

@@ -24,7 +24,7 @@ This directory contains convenience scripts for common development tasks. These 
 | `lib-show-versions.sh` | Display current versions of all dependency submodules    |
 | `lib-pin-ink.sh`       | Pin inkcpp submodule to a specific tag version           |
 | `test-run.sh`          | Run demo project tests using Godot                       |
-| `test-setup.sh`        | Extract release package into demo/addons/ink             |
+| `test-setup.sh`        | Extract release package into demo/addons/gd-ink-native   |
 
 ## Detailed Usage
 
@@ -288,7 +288,7 @@ echo 'export GODOT_APP=/path/to/godot' >> ~/.bashrc
 
 ### `setup-demo.sh`
 
-Extract the latest release package into `demo/addons/ink` for testing.
+Extract the latest release package into `demo/addons/gd-ink-native` for testing.
 
 ```bash
 # Syntax
@@ -305,8 +305,8 @@ Extract the latest release package into `demo/addons/ink` for testing.
 
 **What it does:**
 1. Finds release package in `release/` directory
-2. Removes existing `demo/addons/ink` if present
-3. Extracts package to `demo/addons/ink`
+2. Removes existing `demo/addons/gd-ink-native` if present
+3. Extracts package to `demo/addons/gd-ink-native`
 4. Verifies extraction was successful
 5. Lists extracted files
 

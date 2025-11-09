@@ -55,8 +55,8 @@ cmake --build build --target release
    unzip release/godot-ink-*.zip -d demo/addons/
 
    # Or manually copy:
-   # - addon/ink.gdextension → demo/addons/ink/
-   # - build/libgodot_ink.* → demo/addons/ink/bin/
+   # - addon/gd-ink-native.gdextension → demo/addons/gd-ink-native/
+   # - build/libgodot_ink.* → demo/addons/gd-ink-native/bin/
    ```
 
 2. **Open demo project:**
@@ -224,8 +224,8 @@ if story.choose_path_string("chapter2.intro"):
 
 ### Extension Not Loading
 
-1. Check that the binary exists in `demo/addons/ink/bin/`
-2. Verify `demo/addons/ink/ink.gdextension` matches your platform
+1. Check that the binary exists in `demo/addons/gd-ink-native/bin/`
+2. Verify `demo/addons/gd-ink-native/gd-ink-native.gdextension` matches your platform
 3. Check Godot console for error messages
 4. Try rebuilding: `cmake --build build --clean-first`
 

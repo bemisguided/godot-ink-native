@@ -23,7 +23,7 @@ Quick reference guide for AI assistants working on godot-ink-native.
 
 **Testing:**
 - `./scripts/test-run.sh` - Run demo project tests using Godot (requires GODOT_APP env var)
-- `./scripts/test-setup.sh [version]` - Extract release package into demo/addons/ink
+- `./scripts/test-setup.sh [version]` - Extract release package into demo/addons/gd-ink-native
 
 **Dependency Management:**
 - `./scripts/lib-update-godot.sh` - Update godot-cpp submodules to latest stable branches
@@ -155,9 +155,9 @@ The project uses **different versioning strategies** for different dependencies:
 ### Critical Paths
 ```
 godot-ink-native/
-├── CMakeLists.txt           # Root build config
-├── addon/                   # Addon source files
-│   └── ink.gdextension      # Extension config
+├── CMakeLists.txt                     # Root build config
+├── addon/                             # Addon source files
+│   └── gd-ink-native.gdextension      # Extension config
 ├── libs/                    # Third-party libraries (submodules)
 │   ├── godot/
 │   │   ├── godot-cpp-4.4/   # godot-cpp 4.4 (submodule)
@@ -186,7 +186,7 @@ godot-ink-native/
 - Links: godot-cpp, inkcpp, inkcpp_compiler
 - Custom `release` target for packaging
 
-**addon/ink.gdextension** - Extension configuration
+**addon/gd-ink-native.gdextension** - Extension configuration
 - Entry symbol: `godot_ink_init`
 - Platform-specific library paths
 - Compatibility: Godot 4.4 to 4.5.99
@@ -399,7 +399,7 @@ Example: `libgodot_ink.4.4.macos.template_release.framework`
 **When updating Godot version:**
 1. Update submodule: `cd godot-cpp-4.4 && git checkout <version>`
 2. Update CMakeLists.txt: `set(GODOT_VERSION "4.2")`
-3. Update ink.gdextension: `compatibility_minimum = 4.2`
+3. Update gd-ink-native.gdextension: `compatibility_minimum = 4.2`
 4. Update output paths in CMakeLists.txt
 5. Rebuild from scratch
 
@@ -452,7 +452,7 @@ godot --headless --path demo --script tests/test_basic.gd
 
 ### Verification Steps
 
-1. **Binary exists:** Check `demo/addons/ink/bin/` for platform-specific output
+1. **Binary exists:** Check `demo/addons/gd-ink-native/bin/` for platform-specific output
 2. **Binary size:** Should be ~1-2MB (macOS framework ~1.2MB)
 3. **Extension loads:** No errors in Godot console about missing extension
 4. **Classes available:** InkStory and InkChoice visible in Create Node dialog

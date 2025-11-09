@@ -27,7 +27,7 @@ Ink enables branching narratives, choices, variables, and complex story logic.
 ### From Release (Recommended)
 
 1. Download the latest release from the [Releases page](https://github.com/yourusername/godot-ink-native/releases)
-2. Extract the `addons/ink` folder to your Godot project's `addons/` directory
+2. Extract the `addons/gd-ink-native` folder to your Godot project's `addons/` directory
 3. Restart Godot or reload your project
 4. The extension will be automatically loaded
 
