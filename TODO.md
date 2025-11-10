@@ -11,22 +11,6 @@ Currently no critical bugs blocking core functionality.
 ## Code Quality & Refactoring
 
 
-### 5. DRY Pass - Eliminate Code Duplication
-**Priority:** Low
-**Status:** Not Started
-
-- **Issue:** General code review needed for duplicated patterns
-- **Known Duplication:**
-  - Path resolution code (ProjectSettings singleton, globalize_path)
-  - Error handling patterns
-  - CharString UTF-8 conversion patterns
-- **Action Items:**
-  - [ ] Review all source files in `src/`
-  - [ ] Extract common utilities to helper file
-  - [ ] Standardize error reporting patterns
-  - [ ] Add code comments where complex logic exists
-- **Rationale:** Reduces maintenance burden, easier to fix bugs in one place
-
 ## Test Issues (Non-Blocking)
 
 ### 6. get_current_text() Returns Empty String

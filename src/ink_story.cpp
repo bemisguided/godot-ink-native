@@ -6,6 +6,7 @@
 
 #include "ink_story.h"
 #include "ink_compiler.h"
+#include "ink_utils.h"
 
 #include <choice.h>
 #include <compiler.h>
@@ -93,24 +94,13 @@ void InkStory::_update_choices() {
  * @brief Resolve a Godot resource path to a filesystem path
  *
  * Converts res:// URIs to absolute filesystem paths using ProjectSettings.
+ * Delegates to InkUtils::resolve_resource_path() to eliminate code duplication.
  *
  * @param res_path The resource path to resolve
  * @return Resolved filesystem path, or empty string on error
  */
 String InkStory::_resolve_resource_path(const String& res_path) {
-	ProjectSettings* settings = ProjectSettings::get_singleton();
-	if (!settings) {
-		ERR_PRINT("InkStory: Failed to get ProjectSettings singleton");
-		return String();
-	}
-
-	String fs_path = settings->globalize_path(res_path);
-	if (fs_path.is_empty()) {
-		ERR_PRINT(String("InkStory: Failed to resolve path: ") + res_path);
-		return String();
-	}
-
-	return fs_path;
+	return InkUtils::resolve_resource_path(res_path);
 }
 
 /**

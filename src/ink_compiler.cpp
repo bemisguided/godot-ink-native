@@ -5,9 +5,9 @@
  */
 
 #include "ink_compiler.h"
+#include "ink_utils.h"
 
 #include <godot_cpp/classes/file_access.hpp>
-#include <godot_cpp/classes/project_settings.hpp>
 #include <godot_cpp/core/class_db.hpp>
 
 // InkCPP compiler headers
@@ -45,17 +45,9 @@ bool InkCompiler::compile_json_file(const String& json_res_path, const String& b
 	// Create input stream from JSON string
 	std::istringstream json_stream(json_str);
 
-	// Get ProjectSettings to resolve output path
-	ProjectSettings* settings = ProjectSettings::get_singleton();
-	if (!settings) {
-		ERR_PRINT("InkCompiler: Failed to get ProjectSettings singleton");
-		return false;
-	}
-
-	// Convert output path to filesystem path
-	String binary_fs_path = settings->globalize_path(binary_res_path);
+	// Resolve output path using shared utility
+	String binary_fs_path = InkUtils::resolve_resource_path(binary_res_path);
 	if (binary_fs_path.is_empty()) {
-		ERR_PRINT(String("InkCompiler: Failed to resolve binary path: ") + binary_res_path);
 		return false;
 	}
 
