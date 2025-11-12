@@ -114,7 +114,7 @@ echo ""
 
 # Run Godot with the test scene (not --script, as that doesn't load extensions)
 # Open the test scene which will run and quit automatically
-"$GODOT_EXECUTABLE" --headless --path demo tests/test_basic.tscn --quit
+"$GODOT_EXECUTABLE" --headless --path demo tests/test_comprehensive.tscn --quit
 
 # Check exit code
 if [ $? -eq 0 ]; then

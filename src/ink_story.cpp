@@ -38,7 +38,7 @@ InkStory::~InkStory() {
 void InkStory::_bind_methods() {
 	// Loading methods
 	ClassDB::bind_method(D_METHOD("load_story", "story_path"), &InkStory::load_story);
-	ClassDB::bind_method(D_METHOD("reset"), &InkStory::reset);
+	ClassDB::bind_method(D_METHOD("reset_state"), &InkStory::reset_state);
 
 	// Execution methods
 	ClassDB::bind_method(D_METHOD("continue_story"), &InkStory::continue_story);
@@ -205,13 +205,14 @@ bool InkStory::load_story(const String& story_path) {
 	return false;
 }
 
-void InkStory::reset() {
+void InkStory::reset_state() {
 	if (!_story || !_globals) {
 		return;
 	}
 
 	// Recreate the runner to reset state
 	_runner = _story->new_runner(_globals);
+	_current_text = String();
 	_update_choices();
 }
 
@@ -224,10 +225,13 @@ String InkStory::continue_story() {
 		// Get next line using std::string version
 		std::string line = _runner->getline();
 
+		// Cache the text for get_current_text()
+		_current_text = String(line.c_str());
+
 		// Update choices after continuation
 		_update_choices();
 
-		return String(line.c_str());
+		return _current_text;
 	} catch (const std::exception& e) {
 		ERR_PRINT(String("Ink runtime error in continue_story(): ") + String(e.what()));
 		return String();
@@ -243,10 +247,13 @@ String InkStory::continue_story_maximally() {
 		// Get all content until choice or end
 		std::string text = _runner->getall();
 
+		// Cache the text for get_current_text()
+		_current_text = String(text.c_str());
+
 		// Update choices
 		_update_choices();
 
-		return String(text.c_str());
+		return _current_text;
 	} catch (const std::exception& e) {
 		ERR_PRINT(String("Ink runtime error in continue_story_maximally(): ") + String(e.what()));
 		return String();
@@ -258,9 +265,7 @@ bool InkStory::can_continue() const {
 }
 
 String InkStory::get_current_text() const {
-	// Note: inkcpp doesn't store "current text", so this returns empty
-	// Users should store the result of continue_story() themselves
-	return String();
+	return _current_text;
 }
 
 Array InkStory::get_current_choices() const {
@@ -300,7 +305,9 @@ bool InkStory::choose_path_string(const String& path) {
 	}
 
 	// Convert path to hash
-	const char* path_cstr = path.utf8().get_data();
+	// Store CharString to keep it alive during hash computation
+	CharString path_utf8 = path.utf8();
+	const char* path_cstr = path_utf8.get_data();
 	ink::hash_t path_hash = ink::hash_string(path_cstr);
 
 	// Move to the path
@@ -372,7 +379,9 @@ Variant InkStory::get_variable(const String& name) const {
 		return Variant();
 	}
 
-	const char* var_name = name.utf8().get_data();
+	// Store CharString to keep it alive during variable access
+	CharString name_utf8 = name.utf8();
+	const char* var_name = name_utf8.get_data();
 
 	// Try to get as a generic value
 	auto opt_value = _globals->get<ink::runtime::value>(var_name);
@@ -414,7 +423,9 @@ void InkStory::set_variable(const String& name, const Variant& value) {
 		return;
 	}
 
-	const char* var_name = name.utf8().get_data();
+	// Store CharString to keep it alive during variable access
+	CharString name_utf8 = name.utf8();
+	const char* var_name = name_utf8.get_data();
 
 	// Convert Variant to ink::runtime::value
 	ink::runtime::value ink_value;

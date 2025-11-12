@@ -34,7 +34,7 @@ using namespace godot;
  * Basic usage:
  * @code
  * var story = InkStory.new()
- * story.load_story_json(json_content)
+ * story.load_story("res://stories/hello.inkj")
  *
  * while story.can_continue():
  *     print(story.continue_story())
@@ -59,6 +59,9 @@ private:
 
 	// Cached choices for GDScript
 	Array _current_choices;
+
+	// Cached current text from last continue
+	String _current_text;
 
 	// Helper methods
 	void _update_choices();
@@ -100,7 +103,7 @@ public:
 	/**
 	 * @brief Reset the story to the beginning
 	 */
-	void reset();
+	void reset_state();
 
 	// ===== Execution =====
 

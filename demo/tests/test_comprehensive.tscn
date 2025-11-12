@@ -1,0 +1,6 @@
+[gd_scene load_steps=2 format=3 uid="uid://cjx8k2p9ym5zn"]
+
+[ext_resource type="Script" path="res://tests/test_comprehensive.gd" id="1_test_comprehensive"]
+
+[node name="TestComprehensive" type="Node"]
+script = ExtResource("1_test_comprehensive")
