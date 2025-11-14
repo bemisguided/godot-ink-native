@@ -8,6 +8,8 @@
 #define INK_UTILS_H
 
 #include <godot_cpp/variant/string.hpp>
+#include <godot_cpp/variant/variant.hpp>
+#include <types.h>
 
 using namespace godot;
 
@@ -36,6 +38,37 @@ namespace InkUtils {
  * @endcode
  */
 String resolve_resource_path(const String& res_path);
+
+/**
+ * @brief Convert an Ink runtime value to a Godot Variant
+ *
+ * Converts from InkCPP's internal value type to Godot's Variant type,
+ * handling all supported Ink variable types: Bool, Int32, Uint32, Float, String.
+ * List types are not yet supported and will return an empty Variant with a warning.
+ *
+ * Note: No lifetime issues when reading - InkCPP manages the string pointers internally.
+ *
+ * @param ink_val The Ink value to convert
+ * @return Godot Variant containing the converted value, or empty Variant() on error
+ */
+Variant ink_value_to_variant(const ink::runtime::value& ink_val);
+
+/**
+ * @brief Convert a Godot Variant to an Ink runtime value
+ *
+ * Converts from Godot's Variant type to InkCPP's internal value type.
+ * Supports: BOOL, INT, FLOAT variants only.
+ *
+ * Note: STRING variants are NOT handled here due to lifetime requirements.
+ * Strings must be handled directly in the calling code to ensure the CharString
+ * stays alive during the InkCPP copy operation. See InkStory::set_variable() for example.
+ *
+ * Other types will print an error and return an empty ink::runtime::value.
+ *
+ * @param var The Godot Variant to convert
+ * @return Ink value containing the converted data
+ */
+ink::runtime::value variant_to_ink_value(const Variant& var);
 
 } // namespace InkUtils
 

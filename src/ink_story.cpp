@@ -379,42 +379,16 @@ Variant InkStory::get_variable(const String& name) const {
 		return Variant();
 	}
 
-	// Store CharString to keep it alive during variable access
 	CharString name_utf8 = name.utf8();
 	const char* var_name = name_utf8.get_data();
 
-	// Try to get as a generic value
 	auto opt_value = _globals->get<ink::runtime::value>(var_name);
 	if (!opt_value) {
 		return Variant();
 	}
 
-	const ink::runtime::value& val = *opt_value;
-
-	// Convert based on type
-	switch (val.type) {
-		case ink::runtime::value::Type::Bool:
-			return Variant(val.get<ink::runtime::value::Type::Bool>());
-
-		case ink::runtime::value::Type::Int32:
-			return Variant(val.get<ink::runtime::value::Type::Int32>());
-
-		case ink::runtime::value::Type::Uint32:
-			return Variant((int64_t)val.get<ink::runtime::value::Type::Uint32>());
-
-		case ink::runtime::value::Type::Float:
-			return Variant(val.get<ink::runtime::value::Type::Float>());
-
-		case ink::runtime::value::Type::String:
-			return Variant(String(val.get<ink::runtime::value::Type::String>()));
-
-		case ink::runtime::value::Type::List:
-			// TODO: Implement InkList wrapper
-			WARN_PRINT("List variables not yet supported");
-			return Variant();
-	}
-
-	return Variant();
+	// Use helper for all types (no lifetime issues when reading)
+	return InkUtils::ink_value_to_variant(*opt_value);
 }
 
 void InkStory::set_variable(const String& name, const Variant& value) {
@@ -423,41 +397,21 @@ void InkStory::set_variable(const String& name, const Variant& value) {
 		return;
 	}
 
-	// Store CharString to keep it alive during variable access
 	CharString name_utf8 = name.utf8();
 	const char* var_name = name_utf8.get_data();
 
-	// Convert Variant to ink::runtime::value
-	ink::runtime::value ink_value;
-
-	switch (value.get_type()) {
-		case Variant::BOOL:
-			ink_value = ink::runtime::value((bool)value);
-			break;
-
-		case Variant::INT:
-			ink_value = ink::runtime::value((int32_t)(int64_t)value);
-			break;
-
-		case Variant::FLOAT:
-			ink_value = ink::runtime::value((float)(double)value);
-			break;
-
-		case Variant::STRING: {
-			String str = value;
-			// Warning: This string pointer must remain valid!
-			// For safety, we should store it, but for now this is a limitation
-			ink_value = ink::runtime::value(str.utf8().get_data());
-			break;
-		}
-
-		default:
-			ERR_PRINT(String("Unsupported variable type: ") + Variant::get_type_name(value.get_type()));
-			return;
+	// Handle strings directly to ensure CharString stays alive during _globals->set()
+	if (value.get_type() == Variant::STRING) {
+		String str = value;
+		CharString str_utf8 = str.utf8();
+		// InkCPP copies the string data into its internal string_table during set()
+		ink::runtime::value ink_value = ink::runtime::value(str_utf8.get_data());
+		_globals->set<ink::runtime::value>(var_name, ink_value);
+	} else {
+		// Use helper for primitive types (no lifetime issues)
+		ink::runtime::value ink_value = InkUtils::variant_to_ink_value(value);
+		_globals->set<ink::runtime::value>(var_name, ink_value);
 	}
-
-	// Set the variable
-	_globals->set<ink::runtime::value>(var_name, ink_value);
 }
 
 String InkStory::get_current_path() const {

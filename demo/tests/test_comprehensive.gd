@@ -25,7 +25,7 @@ func _ready():
 	test_continuation_modes()
 	test_choice_system()
 	test_path_navigation()
-	# test_variable_operations()  # TODO: Implement get_variable/set_variable API
+	test_variable_operations()
 	# test_tag_hierarchy()  # TODO: Implement get_global_tags/get_knot_tags API
 	test_state_management()
 	test_error_handling()
@@ -278,71 +278,70 @@ func test_path_navigation():
 	print("")
 
 # ===== TEST CATEGORY 5: VARIABLE OPERATIONS =====
-# TODO: Uncomment when get_variable/set_variable API is implemented
 
-#func test_variable_operations():
-#	start_test("Variable Operations")
-#
-#	var story = create_story()
-#
-#	# Test 1: Get initial INT variable
-#	var score = story.get_variable("score")
-#	assert_equals(score, 0, "Initial INT variable correct")
-#
-#	# Test 2: Get initial FLOAT variable
-#	var health = story.get_variable("health")
-#	assert_equals(health, 100.0, "Initial FLOAT variable correct")
-#
-#	# Test 3: Get initial BOOL variable
-#	var has_key = story.get_variable("has_key")
-#	assert_equals(has_key, false, "Initial BOOL variable correct")
-#
-#	# Test 4: Get initial STRING variable
-#	var name = story.get_variable("player_name")
-#	assert_equals(name, "Hero", "Initial STRING variable correct")
-#
-#	# Test 5: Set INT variable externally
-#	story.set_variable("score", 42)
-#	var new_score = story.get_variable("score")
-#	assert_equals(new_score, 42, "Set INT variable succeeds")
-#
-#	# Test 6: Set FLOAT variable
-#	story.set_variable("health", 75.5)
-#	var new_health = story.get_variable("health")
-#	assert_equals(new_health, 75.5, "Set FLOAT variable succeeds")
-#
-#	# Test 7: Set BOOL variable
-#	story.set_variable("has_key", true)
-#	var new_key = story.get_variable("has_key")
-#	assert_equals(new_key, true, "Set BOOL variable succeeds")
-#
-#	# Test 8: Set STRING variable
-#	story.set_variable("player_name", "TestRunner")
-#	var new_name = story.get_variable("player_name")
-#	assert_equals(new_name, "TestRunner", "Set STRING variable succeeds")
-#
-#	# Test 9: Variables modified by story
-#	story.reset_state()
-#	story.choose_path_string("north_path")
-#	story.continue_story_maximally()
-#	var modified_score = story.get_variable("score")
-#	assert_true(modified_score > 0, "Story modifies INT variable")
-#
-#	var modified_health = story.get_variable("health")
-#	assert_true(modified_health < 100.0, "Story modifies FLOAT variable")
-#
-#	# Test 10: Variable persistence across choices
-#	story.reset_state()
-#	story.choose_path_string("south_path")
-#	story.continue_story_maximally()
-#	var key_after_south = story.get_variable("has_key")
-#	assert_equals(key_after_south, true, "BOOL variable persists after story action")
-#
-#	# Test 11: Invalid variable name
-#	var invalid_var = story.get_variable("nonexistent_variable")
-#	assert_true(invalid_var == null, "get_variable() returns null for invalid name")
-#
-#	print("")
+func test_variable_operations():
+	start_test("Variable Operations")
+
+	var story = create_story()
+
+	# Test 1: Get initial INT variable
+	var score = story.get_variable("score")
+	assert_equals(score, 0, "Initial INT variable correct")
+
+	# Test 2: Get initial FLOAT variable
+	var health = story.get_variable("health")
+	assert_equals(health, 100.0, "Initial FLOAT variable correct")
+
+	# Test 3: Get initial BOOL variable
+	var has_key = story.get_variable("has_key")
+	assert_equals(has_key, false, "Initial BOOL variable correct")
+
+	# Test 4: Get initial STRING variable
+	var name = story.get_variable("player_name")
+	assert_equals(name, "Hero", "Initial STRING variable correct")
+
+	# Test 5: Set INT variable externally
+	story.set_variable("score", 42)
+	var new_score = story.get_variable("score")
+	assert_equals(new_score, 42, "Set INT variable succeeds")
+
+	# Test 6: Set FLOAT variable
+	story.set_variable("health", 75.5)
+	var new_health = story.get_variable("health")
+	assert_equals(new_health, 75.5, "Set FLOAT variable succeeds")
+
+	# Test 7: Set BOOL variable
+	story.set_variable("has_key", true)
+	var new_key = story.get_variable("has_key")
+	assert_equals(new_key, true, "Set BOOL variable succeeds")
+
+	# Test 8: Set STRING variable
+	story.set_variable("player_name", "TestRunner")
+	var new_name = story.get_variable("player_name")
+	assert_equals(new_name, "TestRunner", "Set STRING variable succeeds")
+
+	# Test 9: Variables modified by story
+	story.reset_state()
+	story.choose_path_string("north_path")
+	story.continue_story_maximally()
+	var modified_score = story.get_variable("score")
+	assert_true(modified_score > 0, "Story modifies INT variable")
+
+	var modified_health = story.get_variable("health")
+	assert_true(modified_health < 100.0, "Story modifies FLOAT variable")
+
+	# Test 10: Variable persistence across choices
+	story.reset_state()
+	story.choose_path_string("south_path")
+	story.continue_story_maximally()
+	var key_after_south = story.get_variable("has_key")
+	assert_equals(key_after_south, true, "BOOL variable persists after story action")
+
+	# Test 11: Invalid variable name
+	var invalid_var = story.get_variable("nonexistent_variable")
+	assert_true(invalid_var == null, "get_variable() returns null for invalid name")
+
+	print("")
 
 # ===== TEST CATEGORY 6: TAG HIERARCHY =====
 # TODO: Uncomment when get_global_tags/get_knot_tags API is implemented
