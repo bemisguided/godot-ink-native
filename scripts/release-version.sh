@@ -69,29 +69,18 @@ if [[ ! "$GODOT_VERSION" =~ ^(4\.4|4\.5)$ ]]; then
     exit 1
 fi
 
-log_info "Creating release package for Godot $GODOT_VERSION"
+# Use version-specific build directory
+BUILD_DIR="build/${GODOT_VERSION}"
 
 # Build the extension (always use Release build for releases)
-log_info "Building extension (Release)..."
 "$PROJECT_ROOT/scripts/build-version.sh" "$GODOT_VERSION" Release
 
 # Create release package
-log_info "Creating release package..."
-cmake --build build --target release
-
-# Report success
-log_success "Release package created!"
+cmake --build "$BUILD_DIR" --target release
 
 # Show package location
-if [ -d "release" ]; then
-    PACKAGE=$(find release -name "*godot${GODOT_VERSION}*" -type f | head -n 1)
-    if [ -n "$PACKAGE" ]; then
-        log_info "Package location: $PACKAGE"
-        SIZE=$(du -h "$PACKAGE" | cut -f1)
-        log_info "Package size: $SIZE"
-
-        # Show package contents
-        log_info "Package contents:"
-        unzip -l "$PACKAGE" | tail -n +4 | head -n -2
-    fi
+PACKAGE=$(find release -name "*godot${GODOT_VERSION}*" -type f 2>/dev/null | head -n 1)
+if [ -n "$PACKAGE" ]; then
+    echo ""
+    echo "Package: $PACKAGE"
 fi

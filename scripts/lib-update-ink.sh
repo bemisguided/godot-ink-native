@@ -104,3 +104,8 @@ else
 fi
 
 log_success "InkCPP submodule updated!"
+echo ""
+log_warn "IMPORTANT: Dependencies have been updated!"
+log_warn "You must rebuild with --clean flag to use the new versions:"
+log_warn "  ./scripts/build-version.sh 4.4 --clean"
+log_warn "  ./scripts/build-version.sh 4.5 --clean"

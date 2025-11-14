@@ -17,7 +17,7 @@ Quick reference guide for AI assistants working on godot-ink-native.
 ### Available Scripts (Always Permitted)
 
 **Build & Release:**
-- `./scripts/build-version.sh <version> [build_type]` - Clean, configure, and build for specific Godot version
+- `./scripts/build-version.sh <version> [build_type] [--clean]` - Configure and build for specific Godot version (incremental by default)
 - `./scripts/release-version.sh <version>` - Build and create release package
 - `./scripts/release-all.sh` - Build and release for all supported versions
 
@@ -161,9 +161,11 @@ godot-ink-native/
 ├── libs/                    # Third-party libraries (submodules)
 │   ├── godot/
 │   │   ├── godot-cpp-4.4/   # godot-cpp 4.4 (submodule)
-│   │   └── godot-cpp-4.4/   # godot-cpp 4.4 (submodule)
+│   │   └── godot-cpp-4.5/   # godot-cpp 4.5 (submodule)
 │   └── inkcpp/              # inkcpp library (submodule)
 ├── build/                   # CMake build directory (gitignored)
+│   ├── 4.4/                 # Build artifacts for Godot 4.4
+│   └── 4.5/                 # Build artifacts for Godot 4.5
 ├── release/                 # Distribution packages (gitignored)
 │   └── godot-ink-*.zip
 ├── demo/                    # Demo project (no addons/)
@@ -192,7 +194,7 @@ godot-ink-native/
 - Compatibility: Godot 4.4 to 4.5.99
 
 **.gitignore** - Exclude build artifacts
-- `/build/` directory
+- `/build/*/` directories (version-specific: build/4.4/, build/4.5/)
 - CMake artifacts (CMakeCache.txt, CMakeFiles/, *.cmake)
 - Binary outputs (except .gitkeep)
 
@@ -286,8 +288,11 @@ namespace ink::runtime {
 
 **Recommended workflow (uses permitted scripts):**
 ```bash
-# Build for Godot 4.4
+# Build for Godot 4.4 (incremental)
 ./scripts/build-version.sh 4.4
+
+# Build with clean (after dependency updates)
+./scripts/build-version.sh 4.4 --clean
 
 # Create release package
 ./scripts/release-version.sh 4.4
@@ -305,17 +310,17 @@ namespace ink::runtime {
 <summary>Manual Build Flow (click to expand)</summary>
 
 ```bash
-# 1. Configure (specify Godot version)
-cmake -S . -B build -DCMAKE_BUILD_TYPE=Release -DGODOT_VERSION=4.4
+# 1. Configure (specify Godot version) - uses version-specific directory
+cmake -S . -B build/4.4 -DCMAKE_BUILD_TYPE=Release -DGODOT_VERSION=4.4
 
 # 2. Build
-cmake --build build --config Release -j 4
+cmake --build build/4.4 --config Release -j 4
 
 # 3. Create distribution package
-cmake --build build --target release
+cmake --build build/4.4 --target release
 
 # 4. Output locations:
-# - Binary: build/libgodot_ink.4.4.{platform}.template_release.*
+# - Binary: build/4.4/libgodot_ink.4.4.{platform}.template_release.*
 # - Package: release/godot-ink-0.1.0-godot4.4-{platform}.zip
 
 # 5. Testing with demo (manual copy):
@@ -336,29 +341,43 @@ godot --path demo
 
 **Switching Godot versions (use scripts):**
 ```bash
-# Build for different version - script handles cleaning automatically
+# Build for 4.4 (uses build/4.4/ directory)
 ./scripts/build-version.sh 4.4
-./scripts/release-version.sh 4.4
+
+# Build for 4.5 (uses build/4.5/ directory)
+./scripts/build-version.sh 4.5
+
+# Switch back to 4.4 - FAST! (seconds, not minutes)
+./scripts/build-version.sh 4.4
+
+# Force clean rebuild if needed
+./scripts/build-version.sh 4.4 --clean
 ```
+
+**Performance:**
+- First build: ~5-10 minutes (builds dependencies)
+- Switching versions: ~2-4 seconds (no rebuild needed)
+- Incremental rebuild: ~8-15 seconds (only changed files)
 
 <details>
 <summary>Manual version switching (not recommended)</summary>
 
 ```bash
-# Clean previous build
-rm -rf build
+# Version-specific directory - no cleaning needed
+cmake -S . -B build/4.4 -DCMAKE_BUILD_TYPE=Release -DGODOT_VERSION=4.4
+cmake --build build/4.4 --config Release
+cmake --build build/4.4 --target release
 
-# Configure for different version
-cmake -S . -B build -DCMAKE_BUILD_TYPE=Release -DGODOT_VERSION=4.4
-cmake --build build --config Release
-cmake --build build --target release
+# Switch to 4.5 - uses separate directory
+cmake -S . -B build/4.5 -DCMAKE_BUILD_TYPE=Release -DGODOT_VERSION=4.5
+cmake --build build/4.5 --config Release
 ```
 
 </details>
 
 **Submodule organization:**
 - `libs/godot/godot-cpp-4.4/` - Godot-CPP 4.4 bindings
-- `libs/godot/godot-cpp-4.4/` - Godot-CPP 4.4 bindings
+- `libs/godot/godot-cpp-4.5/` - Godot-CPP 4.5 bindings
 - `libs/inkcpp/` - InkCPP runtime and compiler
 
 CMake automatically selects the correct godot-cpp version based on GODOT_VERSION.
@@ -622,19 +641,24 @@ int InkExample::get_data() const {
 ### Complete Rebuild Commands (⚠️ USE SCRIPTS - See Section 2)
 
 ```bash
-# Recommended: Use scripts for everything
+# Incremental build (fast)
 ./scripts/build-version.sh 4.4
 ./scripts/release-version.sh 4.4
 ./scripts/test-setup.sh 4.4
 ./scripts/test-run.sh
+
+# Clean build (after dependency updates)
+./scripts/build-version.sh 4.4 --clean
+./scripts/release-version.sh 4.4
 ```
 
 ### Switch Godot Version (⚠️ USE SCRIPTS - See Section 2)
 
 ```bash
-# Scripts handle cleaning automatically
-./scripts/build-version.sh 4.4  # Build for 4.4
-./scripts/build-version.sh 4.4  # Build for 4.4
+# Version-specific directories - no cleaning needed
+./scripts/build-version.sh 4.4  # Build for 4.4 (uses build/4.4/)
+./scripts/build-version.sh 4.5  # Build for 4.5 (uses build/4.5/)
+./scripts/build-version.sh 4.4  # Switch back - FAST! (seconds)
 ```
 
 ### Quick Test (⚠️ USE SCRIPTS - See Section 2)
@@ -661,14 +685,14 @@ int InkExample::get_data() const {
 ### Available Scripts
 
 **Build & Release:**
-- `build-version.sh <version> [build_type]` - Clean, configure, and build for specific Godot version
+- `build-version.sh <version> [build_type] [--clean]` - Configure and build for specific Godot version (incremental by default)
 - `release-version.sh <version>` - Build and create release package
 - `release-all.sh` - Build and release for all supported versions
 
 **Dependency Management:**
-- `lib-update-godot.sh` - Update godot-cpp submodules to latest stable branches
-- `lib-update-ink.sh` - Update inkcpp submodule to latest main/master
-- `lib-update-all.sh` - Update all dependency submodules
+- `lib-update-godot.sh` - Update godot-cpp submodules to latest stable branches (warns to use --clean)
+- `lib-update-ink.sh` - Update inkcpp submodule to latest stable tag (warns to use --clean)
+- `lib-update-all.sh` - Update all dependency submodules (warns to use --clean)
 
 **Testing:**
 - `test-run.sh` - Run demo project tests using Godot

@@ -15,7 +15,7 @@
 # Build directories
 /demo/addons
 /demo/addons/*
-/build/
+/build/*/
 
 # Distribution packages
 /release/

@@ -35,11 +35,6 @@ endif()
 
 # Determine architecture
 set(GODOT_ARCH "x86_64")
-if(CMAKE_SIZEOF_VOID_P EQUAL 8)
-    set(BITS 64)
-else()
-    set(BITS 32)
-endif()
 
 # Determine build type suffix
 if(CMAKE_BUILD_TYPE MATCHES Debug)
@@ -247,50 +242,37 @@ add_custom_target(release
     # Create directories
     COMMAND ${CMAKE_COMMAND} -E echo "Creating release package for Godot ${GODOT_VERSION}..."
     COMMAND ${CMAKE_COMMAND} -E make_directory "${CMAKE_SOURCE_DIR}/release"
-    COMMAND ${CMAKE_COMMAND} -E make_directory "${CMAKE_BINARY_DIR}/package"
-    COMMAND ${CMAKE_COMMAND} -E make_directory "${CMAKE_BINARY_DIR}/package/bin"
+    COMMAND ${CMAKE_COMMAND} -E make_directory "${CMAKE_BINARY_DIR}/release"
+    COMMAND ${CMAKE_COMMAND} -E make_directory "${CMAKE_BINARY_DIR}/release/bin"
 
     # Copy addon source files (excluding .in template)
     COMMAND ${CMAKE_COMMAND} -E copy_directory
         "${CMAKE_SOURCE_DIR}/addon"
-        "${CMAKE_BINARY_DIR}/package"
+        "${CMAKE_BINARY_DIR}/release"
 
     # Copy the configured gd-ink-native.gdextension file (overwriting the .in template)
     COMMAND ${CMAKE_COMMAND} -E copy
         "${CMAKE_BINARY_DIR}/gd-ink-native.gdextension"
-        "${CMAKE_BINARY_DIR}/package/gd-ink-native.gdextension"
+        "${CMAKE_BINARY_DIR}/release/gd-ink-native.gdextension"
 
     # Remove the .in template file from the package
     COMMAND ${CMAKE_COMMAND} -E remove
-        "${CMAKE_BINARY_DIR}/package/gd-ink-native.gdextension.in"
+        "${CMAKE_BINARY_DIR}/release/gd-ink-native.gdextension.in"
 
-    # Copy binary
-    COMMAND ${CMAKE_COMMAND} -E echo "Copying binary: $<TARGET_FILE_NAME:${PROJECT_NAME}>"
-
-    # For macOS frameworks, copy the entire framework bundle; for libraries, copy the file
+    # Copy binary (macOS: entire framework bundle, others: library file)
     COMMAND ${CMAKE_COMMAND} -E
         $<IF:$<STREQUAL:${GODOT_PLATFORM},macos>,copy_directory,copy>
         "$<IF:$<STREQUAL:${GODOT_PLATFORM},macos>,$<TARGET_BUNDLE_DIR:${PROJECT_NAME}>,$<TARGET_FILE:${PROJECT_NAME}>>"
-        "${CMAKE_BINARY_DIR}/package/bin/$<TARGET_FILE_NAME:${PROJECT_NAME}>"
+        "${CMAKE_BINARY_DIR}/release/bin/$<TARGET_FILE_NAME:${PROJECT_NAME}>"
 
-    # Copy inklecate binary if available (for GDInkCompiler tool)
-    COMMAND ${CMAKE_COMMAND} -E echo "Checking for inklecate binary..."
+    # Copy inklecate binary if available (optional, for runtime Ink compilation)
     COMMAND ${CMAKE_COMMAND} -E copy_if_different
         "${CMAKE_SOURCE_DIR}/bin/${INKLECATE_EXECUTABLE}"
-        "${CMAKE_BINARY_DIR}/package/bin/${INKLECATE_EXECUTABLE}"
-
-    # Copy DLLs if they exist (Windows and macOS)
-    COMMAND ${CMAKE_COMMAND} -E copy_if_different
-        "${CMAKE_SOURCE_DIR}/bin/ink_compiler.dll"
-        "${CMAKE_BINARY_DIR}/package/bin/ink_compiler.dll"
-    COMMAND ${CMAKE_COMMAND} -E copy_if_different
-        "${CMAKE_SOURCE_DIR}/bin/ink-engine-runtime.dll"
-        "${CMAKE_BINARY_DIR}/package/bin/ink-engine-runtime.dll"
+        "${CMAKE_BINARY_DIR}/release/bin/${INKLECATE_EXECUTABLE}" || true
 
     # Create zip archive with platform-specific naming
-    # Archive contents of package directory, not the directory itself
-    COMMAND ${CMAKE_COMMAND} -E chdir "${CMAKE_BINARY_DIR}/package"
-        ${CMAKE_COMMAND} -E tar "cfv"
+    COMMAND ${CMAKE_COMMAND} -E chdir "${CMAKE_BINARY_DIR}/release"
+        ${CMAKE_COMMAND} -E tar "cf"
         "${CMAKE_SOURCE_DIR}/release/godot-ink-${PROJECT_VERSION}-godot${GODOT_VERSION}-${GODOT_PLATFORM}$<$<NOT:$<STREQUAL:${GODOT_PLATFORM},macos>>:-${GODOT_ARCH}>.zip"
         --format=zip
         .
@@ -330,20 +312,16 @@ target_compile_definitions(${PROJECT_NAME} PRIVATE
 )
 
 # ==============================================================================
-# Summary
+# Configuration Summary
 # ==============================================================================
 
 message(STATUS "")
-message(STATUS "=== Godot Ink Native Configuration ===")
-message(STATUS "Godot Version:  ${GODOT_VERSION}")
-message(STATUS "Platform:       ${GODOT_PLATFORM}")
-message(STATUS "Architecture:   ${GODOT_ARCH}")
-message(STATUS "Build Type:     ${CMAKE_BUILD_TYPE} (${GODOT_BUILD_TYPE})")
+message(STATUS "=== Configuration ===")
+message(STATUS "Godot ${GODOT_VERSION} | ${GODOT_PLATFORM} | ${CMAKE_BUILD_TYPE}")
 if(GODOT_PLATFORM STREQUAL "macos")
-    message(STATUS "Output Library: libgodot_ink.${GODOT_VERSION}.${GODOT_PLATFORM}.${GODOT_BUILD_TYPE}.framework")
+    message(STATUS "Output: libgodot_ink.${GODOT_VERSION}.${GODOT_PLATFORM}.${GODOT_BUILD_TYPE}.framework")
 else()
-    message(STATUS "Output Library: libgodot_ink.${GODOT_VERSION}.${GODOT_PLATFORM}.${GODOT_BUILD_TYPE}.${GODOT_ARCH}")
+    message(STATUS "Output: libgodot_ink.${GODOT_VERSION}.${GODOT_PLATFORM}.${GODOT_BUILD_TYPE}.${GODOT_ARCH}")
 endif()
-message(STATUS "Output Dir:     ${CMAKE_BINARY_DIR}")
-message(STATUS "===================================")
+message(STATUS "=====================")
 message(STATUS "")

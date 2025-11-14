@@ -33,21 +33,29 @@ log_error() {
 
 show_help() {
     cat << EOF
-Usage: $(basename "$0") <version> [build_type]
+Usage: $(basename "$0") <version> [build_type] [--clean]
 
-Clean, configure, and build the extension for a specific Godot version.
+Configure and build the extension for a specific Godot version.
+Uses version-specific build directories (build-4.4/, build-4.5/) for fast incremental builds.
 
 Arguments:
   version      Godot version to build for (4.4 or 4.5)
   build_type   Build type (Release or Debug, default: Release)
 
 Options:
+  --clean      Clean build directory before building (full rebuild)
   -h, --help   Show this help message
 
 Examples:
-  $(basename "$0") 4.4
-  $(basename "$0") 4.5 Debug
-  $(basename "$0") 4.4 Release
+  $(basename "$0") 4.4                    # Incremental build for 4.4
+  $(basename "$0") 4.5 Debug              # Incremental debug build for 4.5
+  $(basename "$0") 4.4 --clean            # Clean build for 4.4
+  $(basename "$0") 4.5 Debug --clean      # Clean debug build for 4.5
+
+Notes:
+  - Incremental builds are fast (~2-4 seconds if no changes)
+  - Version-specific directories prevent 4.4/4.5 interference
+  - Use --clean after updating dependencies (git submodule update)
 
 EOF
 }
@@ -64,7 +72,28 @@ cd "$PROJECT_ROOT"
 
 # Parse arguments
 GODOT_VERSION="$1"
-BUILD_TYPE="${2:-Release}"
+BUILD_TYPE="Release"
+CLEAN_BUILD=false
+
+# Parse remaining arguments
+shift
+while [[ $# -gt 0 ]]; do
+    case "$1" in
+        --clean)
+            CLEAN_BUILD=true
+            shift
+            ;;
+        Release|Debug)
+            BUILD_TYPE="$1"
+            shift
+            ;;
+        *)
+            log_error "Unknown argument: $1"
+            show_help
+            exit 1
+            ;;
+    esac
+done
 
 # Validate Godot version
 if [[ ! "$GODOT_VERSION" =~ ^(4\.4|4\.5)$ ]]; then
@@ -80,33 +109,14 @@ if [[ ! "$BUILD_TYPE" =~ ^(Release|Debug)$ ]]; then
     exit 1
 fi
 
-log_info "Building godot-ink for Godot $GODOT_VERSION ($BUILD_TYPE)"
+# Use version-specific build directory
+BUILD_DIR="build/${GODOT_VERSION}"
 
-# Clean build directory
-if [ -d "build" ]; then
-    log_info "Cleaning build directory..."
-    rm -rf build
+# Clean build directory if requested
+if [ "$CLEAN_BUILD" = true ] && [ -d "$BUILD_DIR" ]; then
+    rm -rf "$BUILD_DIR"
 fi
 
-# Configure
-log_info "Configuring CMake..."
-cmake -S . -B build -DCMAKE_BUILD_TYPE="$BUILD_TYPE" -DGODOT_VERSION="$GODOT_VERSION"
-
-# Build
-log_info "Building extension..."
-cmake --build build --config "$BUILD_TYPE" -j4
-
-# Report success
-log_success "Build complete!"
-
-# Show binary location
-if [ -d "build" ]; then
-    BINARY=$(find build -name "libgodot_ink*" -type f -o -name "libgodot_ink*.framework" -type d | head -n 1)
-    if [ -n "$BINARY" ]; then
-        log_info "Binary location: $BINARY"
-        if [ -f "$BINARY" ]; then
-            SIZE=$(du -h "$BINARY" | cut -f1)
-            log_info "Binary size: $SIZE"
-        fi
-    fi
-fi
+# Configure and build
+cmake -S . -B "$BUILD_DIR" -DCMAKE_BUILD_TYPE="$BUILD_TYPE" -DGODOT_VERSION="$GODOT_VERSION"
+cmake --build "$BUILD_DIR" --config "$BUILD_TYPE" -j4

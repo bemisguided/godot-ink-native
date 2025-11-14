@@ -110,6 +110,11 @@ fi
 echo ""
 if [ ${#FAILED_UPDATES[@]} -eq 0 ]; then
     log_success "All submodules updated successfully!"
+    echo ""
+    log_warn "IMPORTANT: Dependencies have been updated!"
+    log_warn "You must rebuild with --clean flag to use the new versions:"
+    log_warn "  ./scripts/build-version.sh 4.4 --clean"
+    log_warn "  ./scripts/build-version.sh 4.5 --clean"
     exit 0
 else
     log_error "Some submodules failed to update. See above for details."
