@@ -92,13 +92,12 @@ Godot wrapper over InkCPP (`story` + `runner`). Public API mirrors C# with Godot
 
 ### Variables
 
-| C#                             | Godot wrapper                                                 | In                | Out          | Status | Notes                             |
-| ------------------------------ | ------------------------------------------------------------- | ----------------- | ------------ | ------ | --------------------------------- |
-| `variablesState[name] = value` | `void set_variable(const String& name, const Variant& value)` | `String, Variant` | `void`       | ✔      | Variant→ink value conversion.     |
-| `var v = variablesState[name]` | `Variant get_variable(const String& name) const`              | `String`          | `Variant`    | ✔      | ink value→Variant conversion.     |
-| `VariablesState` object        | `Dictionary variables_snapshot() const`                       | –                 | `Dictionary` | △      | Optional bulk dump for debugging. |
+| C#                             | Godot wrapper                                                 | In                | Out       | Status | Notes                         |
+| ------------------------------ | ------------------------------------------------------------- | ----------------- | --------- | ------ | ----------------------------- |
+| `variablesState[name] = value` | `void set_variable(const String& name, const Variant& value)` | `String, Variant` | `void`    | ✔      | Variant→ink value conversion. |
+| `var v = variablesState[name]` | `Variant get_variable(const String& name) const`              | `String`          | `Variant` | ✔      | ink value→Variant conversion. |
 
-> Correction you flagged: **binding is for external functions, not variables**. Variables use `get_variable/set_variable`. Observers below.
+> **Note**: InkCPP does not provide an API to enumerate all variables. Variable access is by name only using `get_variable/set_variable`.
 
 ### Variable observers
 

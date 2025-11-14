@@ -9,7 +9,7 @@
 
 #include "ink_choice.h"
 
-#include <godot_cpp/classes/ref_counted.hpp>
+#include <godot_cpp/classes/resource.hpp>
 #include <godot_cpp/variant/array.hpp>
 #include <godot_cpp/variant/packed_byte_array.hpp>
 #include <godot_cpp/variant/packed_string_array.hpp>
@@ -45,10 +45,14 @@ using namespace godot;
  * story.choose_choice_index(0)
  * @endcode
  */
-class InkStory : public RefCounted {
-	GDCLASS(InkStory, RefCounted)
+class InkStory : public Resource {
+	GDCLASS(InkStory, Resource)
 
 private:
+	// Serialized: Path to the loaded story file
+	String _story_path;
+
+	// Transient runtime data (not serialized):
 	// InkCPP objects
 	ink::runtime::story* _story;
 	ink::runtime::runner _runner;
@@ -201,6 +205,23 @@ public:
 	 * @return Current path string
 	 */
 	String get_current_path() const;
+
+	// ===== Resource Properties =====
+
+	/**
+	 * @brief Set the path to the story file
+	 * @param path Path to .inkb or .inkj file
+	 *
+	 * When set, automatically loads the story from the specified path.
+	 * This enables Resource serialization and inspector assignment.
+	 */
+	void set_story_path(const String& path);
+
+	/**
+	 * @brief Get the path to the currently loaded story file
+	 * @return Path to the story file, or empty string if none loaded
+	 */
+	String get_story_path() const;
 
 	// ===== Utility =====
 

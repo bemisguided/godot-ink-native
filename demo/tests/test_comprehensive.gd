@@ -22,6 +22,7 @@ func _ready():
 
 	# Run all test categories
 	test_loading_and_compilation()
+	test_resource_properties()
 	test_continuation_modes()
 	test_choice_system()
 	test_path_navigation()
@@ -153,7 +154,86 @@ func test_loading_and_compilation():
 
 	print("")
 
-# ===== TEST CATEGORY 2: CONTINUATION MODES =====
+# ===== TEST CATEGORY 2: RESOURCE PROPERTIES =====
+
+func test_resource_properties():
+	start_test("Resource Properties")
+
+	# Test 1: set_story_path() loads story automatically
+	var story1 = InkStory.new()
+	story1.set_story_path("res://examples/test_story.ink.json")
+	assert_true(story1.is_loaded(), "set_story_path() loads story automatically")
+
+	# Test 2: get_story_path() returns set path
+	var path1 = story1.get_story_path()
+	assert_equals(path1, "res://examples/test_story.ink.json", "get_story_path() returns correct path")
+
+	# Test 3: Story is functional after set_story_path()
+	var text = story1.continue_story()
+	assert_not_null(text, "Story functional after set_story_path()")
+	assert_contains(text, "Welcome", "Content loaded correctly via set_story_path()")
+
+	# Test 4: set_story_path() with .inkb file
+	var story2 = InkStory.new()
+	story2.set_story_path("res://examples/test_story.ink.inkb")
+	assert_true(story2.is_loaded(), "set_story_path() works with .inkb files")
+	var path2 = story2.get_story_path()
+	assert_equals(path2, "res://examples/test_story.ink.inkb", "get_story_path() returns .inkb path")
+
+	# Test 5: Content matches between .json and .inkb paths
+	var text1 = story1.get_current_text()
+	var text2 = story2.continue_story()
+	assert_equals(text1, text2, "Content matches between path-loaded .json and .inkb")
+
+	# Test 6: Empty path handling
+	var story3 = InkStory.new()
+	story3.set_story_path("")
+	var empty_path = story3.get_story_path()
+	assert_equals(empty_path, "", "Empty path handled correctly")
+	assert_true(story3.is_loaded() == false, "Story not loaded with empty path")
+
+	# Test 7: Path persists after operations
+	var story4 = InkStory.new()
+	story4.set_story_path("res://examples/test_story.ink.json")
+	story4.continue_story_maximally()
+	var path_after = story4.get_story_path()
+	assert_equals(path_after, "res://examples/test_story.ink.json", "Path persists after continue operations")
+
+	# Test 8: Path persists after reset
+	story4.reset_state()
+	var path_after_reset = story4.get_story_path()
+	assert_equals(path_after_reset, "res://examples/test_story.ink.json", "Path persists after reset_state()")
+
+	# Test 9: Changing path reloads story
+	var story5 = InkStory.new()
+	story5.set_story_path("res://examples/test_story.ink.json")
+	story5.continue_story_maximally()
+	var choice_count1 = story5.get_current_choice_count()
+
+	# Reload same story - should reset to beginning
+	story5.set_story_path("res://examples/test_story.ink.json")
+	assert_true(story5.can_continue(), "Story reset when path set again")
+	var text_after_reload = story5.continue_story()
+	assert_contains(text_after_reload, "Welcome", "Story reloaded from beginning")
+
+	# Test 10: load_story() updates path
+	var story6 = InkStory.new()
+	story6.load_story("res://examples/test_story.ink.json")
+	var path_from_load = story6.get_story_path()
+	assert_equals(path_from_load, "res://examples/test_story.ink.json", "load_story() sets story_path property")
+
+	# Test 11: Invalid path handling
+	var story7 = InkStory.new()
+	story7.set_story_path("res://examples/nonexistent.ink.json")
+	# Should fail gracefully
+	assert_true(story7.is_loaded() == false, "Invalid path via set_story_path() doesn't load")
+	# Path might be set or empty depending on implementation
+	var invalid_path = story7.get_story_path()
+	assert_not_null(invalid_path, "get_story_path() returns value even after failed load")
+
+	print("")
+
+# ===== TEST CATEGORY 3: CONTINUATION MODES =====
 
 func test_continuation_modes():
 	start_test("Continuation Modes")
@@ -190,7 +270,7 @@ func test_continuation_modes():
 
 	print("")
 
-# ===== TEST CATEGORY 3: CHOICE SYSTEM =====
+# ===== TEST CATEGORY 4: CHOICE SYSTEM =====
 
 func test_choice_system():
 	start_test("Choice System")
@@ -241,7 +321,7 @@ func test_choice_system():
 
 	print("")
 
-# ===== TEST CATEGORY 4: PATH NAVIGATION =====
+# ===== TEST CATEGORY 5: PATH NAVIGATION =====
 
 func test_path_navigation():
 	start_test("Path Navigation")
@@ -277,7 +357,7 @@ func test_path_navigation():
 
 	print("")
 
-# ===== TEST CATEGORY 5: VARIABLE OPERATIONS =====
+# ===== TEST CATEGORY 6: VARIABLE OPERATIONS =====
 
 func test_variable_operations():
 	start_test("Variable Operations")
@@ -343,7 +423,7 @@ func test_variable_operations():
 
 	print("")
 
-# ===== TEST CATEGORY 6: TAG HIERARCHY =====
+# ===== TEST CATEGORY 7: TAG HIERARCHY =====
 # TODO: Uncomment when get_global_tags/get_knot_tags API is implemented
 
 #func test_tag_hierarchy():
@@ -382,7 +462,7 @@ func test_variable_operations():
 #
 #	print("")
 
-# ===== TEST CATEGORY 7: STATE MANAGEMENT =====
+# ===== TEST CATEGORY 8: STATE MANAGEMENT =====
 
 func test_state_management():
 	start_test("State Management")
@@ -427,7 +507,7 @@ func test_state_management():
 
 	print("")
 
-# ===== TEST CATEGORY 8: ERROR HANDLING =====
+# ===== TEST CATEGORY 9: ERROR HANDLING =====
 
 func test_error_handling():
 	start_test("Error Handling")
@@ -474,7 +554,7 @@ func test_error_handling():
 
 	print("")
 
-# ===== TEST CATEGORY 9: EDGE CASES =====
+# ===== TEST CATEGORY 10: EDGE CASES =====
 
 func test_edge_cases():
 	start_test("Edge Cases")
@@ -518,7 +598,7 @@ func test_edge_cases():
 
 	print("")
 
-# ===== TEST CATEGORY 10: TEXT CACHING =====
+# ===== TEST CATEGORY 11: TEXT CACHING =====
 
 func test_text_caching():
 	start_test("Text Caching")

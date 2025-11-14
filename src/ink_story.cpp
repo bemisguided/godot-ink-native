@@ -64,6 +64,12 @@ void InkStory::_bind_methods() {
 	// Path methods
 	ClassDB::bind_method(D_METHOD("get_current_path"), &InkStory::get_current_path);
 
+	// Resource property methods
+	ClassDB::bind_method(D_METHOD("set_story_path", "path"), &InkStory::set_story_path);
+	ClassDB::bind_method(D_METHOD("get_story_path"), &InkStory::get_story_path);
+	ADD_PROPERTY(PropertyInfo(Variant::STRING, "story_path", PROPERTY_HINT_FILE, "*.inkb,*.inkj,*.json"),
+	             "set_story_path", "get_story_path");
+
 	// Utility methods
 	ClassDB::bind_method(D_METHOD("is_loaded"), &InkStory::is_loaded);
 }
@@ -191,18 +197,26 @@ bool InkStory::load_story(const String& story_path) {
 	String extension = story_path.get_extension().to_lower();
 
 	// Route to appropriate loader
+	bool success = false;
 	if (extension == "json" || extension == "inkj") {
 		// JSON formats require compilation
-		return _compile_and_load_json(story_path);
+		success = _compile_and_load_json(story_path);
 	} else if (extension == "inkb") {
 		// Binary format loads directly
-		return _load_binary_story(story_path);
+		success = _load_binary_story(story_path);
+	} else {
+		// Unsupported format
+		ERR_PRINT(String("InkStory: Unsupported file extension '") + extension +
+		          String("'. Use .json, .ink.json, .inkj, or .inkb files."));
+		return false;
 	}
 
-	// Unsupported format
-	ERR_PRINT(String("InkStory: Unsupported file extension '") + extension +
-	          String("'. Use .json, .ink.json, .inkj, or .inkb files."));
-	return false;
+	// Store path on successful load
+	if (success) {
+		_story_path = story_path;
+	}
+
+	return success;
 }
 
 void InkStory::reset_state() {
@@ -430,4 +444,21 @@ String InkStory::get_current_path() const {
 
 bool InkStory::is_loaded() const {
 	return _story != nullptr && _runner;
+}
+
+void InkStory::set_story_path(const String& path) {
+	if (path.is_empty()) {
+		_story_path = String();
+		return;
+	}
+
+	// Load the story when path is set
+	if (load_story(path)) {
+		// _story_path is set by load_story() on success
+		// This enables Resource serialization
+	}
+}
+
+String InkStory::get_story_path() const {
+	return _story_path;
 }
