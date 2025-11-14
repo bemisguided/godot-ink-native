@@ -63,49 +63,18 @@ if [ ! -d "$SUBMODULE_PATH" ]; then
     exit 1
 fi
 
-log_info "Updating inkcpp submodule..."
-
-# Get current tag (if on a tag) or commit
-OLD_TAG=$(cd "$SUBMODULE_PATH" && git describe --tags --exact-match 2>/dev/null || echo "")
-if [ -z "$OLD_TAG" ]; then
-    OLD_TAG=$(cd "$SUBMODULE_PATH" && git rev-parse --short HEAD)
-    log_info "Currently on commit: $OLD_TAG (not a tagged release)"
-else
-    log_info "Currently on tag: $OLD_TAG"
-fi
-
-# Fetch all tags from remote
-log_info "Fetching tags from remote..."
+# Fetch and find latest tag
 (cd "$SUBMODULE_PATH" && git fetch --tags)
 
-# Find latest semantic version tag (v0.1.x, v0.2.x, etc.)
 LATEST_TAG=$(cd "$SUBMODULE_PATH" && git tag -l 'v*' | sort -V | tail -n 1)
 
 if [ -z "$LATEST_TAG" ]; then
-    log_error "No version tags found in inkcpp repository"
+    log_error "No version tags found"
     exit 1
 fi
 
-log_info "Latest available tag: $LATEST_TAG"
+# Checkout latest tag
+(cd "$SUBMODULE_PATH" && git checkout "$LATEST_TAG")
 
-# Checkout the latest tag
-(
-    cd "$SUBMODULE_PATH"
-    git checkout "$LATEST_TAG"
-)
-
-# Get new tag after update
-NEW_TAG=$(cd "$SUBMODULE_PATH" && git describe --tags --exact-match 2>/dev/null)
-
-if [ "$OLD_TAG" == "$NEW_TAG" ]; then
-    log_info "Already on latest tag ($OLD_TAG)"
-else
-    log_success "Updated: $OLD_TAG -> $NEW_TAG"
-fi
-
-log_success "InkCPP submodule updated!"
 echo ""
-log_warn "IMPORTANT: Dependencies have been updated!"
-log_warn "You must rebuild with --clean flag to use the new versions:"
-log_warn "  ./scripts/build-version.sh 4.4 --clean"
-log_warn "  ./scripts/build-version.sh 4.5 --clean"
+echo "InkCPP updated to $LATEST_TAG"

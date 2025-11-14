@@ -101,68 +101,44 @@ else
     fi
 fi
 
-log_info "Found package: $(basename "$PACKAGE")"
-SIZE=$(du -h "$PACKAGE" | cut -f1)
-log_info "Package size: $SIZE"
-
 # Ensure demo directory exists
 if [ ! -d "demo" ]; then
     log_error "Demo directory not found: demo/"
     exit 1
 fi
 
-# Clean existing addon installation
-if [ -d "demo/addons/gd-ink-native" ]; then
-    log_info "Removing existing addon installation..."
-    rm -rf demo/addons/gd-ink-native
-fi
-
-# Ensure demo/addons directory exists
+# Clean and recreate addon directory
+rm -rf demo/addons/gd-ink-native
 mkdir -p demo/addons
 
 # Extract package
-log_info "Extracting package to demo/addons/gd-ink-native..."
 unzip -q "$PACKAGE" -d demo/addons/gd-ink-native
 
 # Verify extraction
-if [ -f "demo/addons/gd-ink-native/gd-ink-native.gdextension" ]; then
-    log_success "Addon extracted successfully!"
-
-    # Fix macOS framework extensions (zip extraction strips .framework suffix)
-    if [ -d "demo/addons/gd-ink-native/bin" ]; then
-        for framework_dir in demo/addons/gd-ink-native/bin/libgodot_ink.*.macos.*; do
-            if [ -d "$framework_dir" ] && [[ ! "$framework_dir" == *.framework ]]; then
-                log_info "Fixing framework extension: $(basename "$framework_dir")"
-                mv "$framework_dir" "${framework_dir}.framework"
-            fi
-        done
-
-        # Create debug symlinks if only release builds exist (for development/testing)
-        for release_framework in demo/addons/gd-ink-native/bin/*.template_release.framework; do
-            if [ -d "$release_framework" ]; then
-                debug_framework="${release_framework/template_release/template_debug}"
-                if [ ! -e "$debug_framework" ]; then
-                    log_info "Creating debug symlink: $(basename "$debug_framework")"
-                    ln -s "$(basename "$release_framework")" "$debug_framework"
-                fi
-            fi
-        done
-    fi
-
-    # Show what was extracted
-    log_info "Extracted files:"
-    find demo/addons/gd-ink-native -type f | sed 's|demo/addons/gd-ink-native/||' | sed 's/^/  - /'
-
-    echo ""
-    log_warn "IMPORTANT: First-Time Setup Required"
-    log_warn "GDExtensions must be registered by opening the project in Godot editor."
-    log_warn ""
-    log_info "Run this command FIRST to register the extension:"
-    echo "  godot --editor --path demo"
-    log_info ""
-    log_info "After opening the editor once, you can run headless tests:"
-    echo "  scripts/test.sh"
-else
+if [ ! -f "demo/addons/gd-ink-native/gd-ink-native.gdextension" ]; then
     log_error "Extraction failed: gd-ink-native.gdextension not found"
     exit 1
 fi
+
+# Fix macOS framework extensions (zip strips .framework suffix)
+if [ -d "demo/addons/gd-ink-native/bin" ]; then
+    for framework_dir in demo/addons/gd-ink-native/bin/libgodot_ink.*.macos.*; do
+        if [ -d "$framework_dir" ] && [[ ! "$framework_dir" == *.framework ]]; then
+            mv "$framework_dir" "${framework_dir}.framework"
+        fi
+    done
+
+    # Create debug symlinks if only release builds exist
+    for release_framework in demo/addons/gd-ink-native/bin/*.template_release.framework; do
+        if [ -d "$release_framework" ]; then
+            debug_framework="${release_framework/template_release/template_debug}"
+            if [ ! -e "$debug_framework" ]; then
+                ln -s "$(basename "$release_framework")" "$debug_framework"
+            fi
+        fi
+    done
+fi
+
+echo ""
+echo "Addon installed to demo/addons/gd-ink-native/"
+echo "First-time setup: Open project in Godot editor to register extension"

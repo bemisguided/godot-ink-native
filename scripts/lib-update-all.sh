@@ -58,65 +58,15 @@ cd "$PROJECT_ROOT"
 
 log_info "Updating all dependency submodules..."
 
-# Track results
-SUCCESS_COUNT=0
-FAILED_UPDATES=()
-
 # Update godot-cpp submodules
-echo ""
-log_info "=========================================="
-log_info "Updating godot-cpp submodules"
-log_info "=========================================="
-if "$PROJECT_ROOT/scripts/lib-update-godot.sh"; then
-    SUCCESS_COUNT=$((SUCCESS_COUNT + 1))
-else
-    log_error "Failed to update godot-cpp submodules"
-    FAILED_UPDATES+=("godot-cpp")
-fi
+"$PROJECT_ROOT/scripts/lib-update-godot.sh" || log_error "Failed to update godot-cpp"
 
 # Update inkcpp submodule
-echo ""
-log_info "=========================================="
-log_info "Updating inkcpp submodule"
-log_info "=========================================="
-if "$PROJECT_ROOT/scripts/lib-update-ink.sh"; then
-    SUCCESS_COUNT=$((SUCCESS_COUNT + 1))
-else
-    log_error "Failed to update inkcpp submodule"
-    FAILED_UPDATES+=("inkcpp")
-fi
+"$PROJECT_ROOT/scripts/lib-update-ink.sh" || log_error "Failed to update inkcpp"
 
-# Ensure all submodules are properly initialized
-echo ""
-log_info "Ensuring submodule consistency..."
-if git submodule update --init --recursive; then
-    log_success "Submodules synchronized"
-else
-    log_warn "Submodule synchronization reported warnings"
-fi
+# Synchronize submodules
+git submodule update --init --recursive
 
-# Summary
 echo ""
-log_info "=========================================="
-log_info "Update Summary"
-log_info "=========================================="
-log_info "Successful updates: $SUCCESS_COUNT/2"
-
-if [ ${#FAILED_UPDATES[@]} -gt 0 ]; then
-    log_warn "Failed updates: ${FAILED_UPDATES[*]}"
-fi
-
-# Final result
-echo ""
-if [ ${#FAILED_UPDATES[@]} -eq 0 ]; then
-    log_success "All submodules updated successfully!"
-    echo ""
-    log_warn "IMPORTANT: Dependencies have been updated!"
-    log_warn "You must rebuild with --clean flag to use the new versions:"
-    log_warn "  ./scripts/build-version.sh 4.4 --clean"
-    log_warn "  ./scripts/build-version.sh 4.5 --clean"
-    exit 0
-else
-    log_error "Some submodules failed to update. See above for details."
-    exit 1
-fi
+echo "All submodules updated"
+echo "Rebuild with: ./scripts/build-version.sh 4.4 --clean"

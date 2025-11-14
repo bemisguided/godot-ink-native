@@ -66,63 +66,28 @@ GODOT_EXECUTABLE="${GODOT_APP:-godot}"
 # Check if Godot is available
 if ! command -v "$GODOT_EXECUTABLE" &> /dev/null; then
     log_error "Godot executable not found: $GODOT_EXECUTABLE"
-    log_error ""
-    log_error "Please set the GODOT_APP environment variable:"
-    log_error "  export GODOT_APP=/path/to/godot"
-    log_error ""
-    log_error "Or ensure 'godot' is in your PATH."
+    echo "Set GODOT_APP environment variable or ensure 'godot' is in PATH"
     exit 1
 fi
 
-# Check if demo directory exists
-if [ ! -d "demo" ]; then
-    log_error "Demo directory not found: demo/"
-    exit 1
-fi
-
-# Check if demo project file exists
+# Check if demo project exists
 if [ ! -f "demo/project.godot" ]; then
-    log_error "Demo project file not found: demo/project.godot"
+    log_error "Demo project not found: demo/project.godot"
     exit 1
 fi
 
-# Check if addon is installed in demo
+# Check if addon is installed
 if [ ! -d "demo/addons/gd-ink-native" ]; then
-    log_warn "Addon not found in demo/addons/gd-ink-native/"
-    log_warn "Run 'scripts/setup-demo.sh' to extract the addon first"
-    log_warn ""
+    log_error "Addon not installed. Run: scripts/test-setup.sh"
+    exit 1
 fi
 
-# Check if project has been opened in editor (GDExtension registration)
+# Check if project has been registered in editor
 if [ ! -d "demo/.godot" ]; then
-    log_error "Project has not been opened in Godot editor yet"
-    log_error ""
-    log_error "GDExtensions in Godot 4.x must be registered by opening the project"
-    log_error "in the editor first. This creates the .godot/ cache directory."
-    log_error ""
-    log_error "Run this command to open the project and register the extension:"
-    log_error "  $GODOT_EXECUTABLE --editor --path demo"
-    log_error ""
-    log_error "After the editor opens, close it and then run tests again."
+    log_error "Extension not registered. Open project in editor first:"
+    echo "  $GODOT_EXECUTABLE --editor --path demo"
     exit 1
 fi
 
 # Run tests
-log_info "Running tests with: $GODOT_EXECUTABLE"
-log_info "Project: demo/"
-echo ""
-
-# Run Godot with the test scene (not --script, as that doesn't load extensions)
-# Open the test scene which will run and quit automatically
 "$GODOT_EXECUTABLE" --headless --path demo tests/test_comprehensive.tscn --quit
-
-# Check exit code
-if [ $? -eq 0 ]; then
-    echo ""
-    log_success "Tests completed successfully!"
-    exit 0
-else
-    echo ""
-    log_error "Tests failed!"
-    exit 1
-fi

@@ -59,8 +59,6 @@ cd "$PROJECT_ROOT"
 # Godot-CPP versions to update
 GODOT_VERSIONS=("4.4" "4.5")
 
-log_info "Updating godot-cpp submodules..."
-
 for VERSION in "${GODOT_VERSIONS[@]}"; do
     SUBMODULE_PATH="libs/godot/godot-cpp-$VERSION"
 
@@ -69,31 +67,13 @@ for VERSION in "${GODOT_VERSIONS[@]}"; do
         continue
     fi
 
-    log_info "Updating godot-cpp-$VERSION..."
-
-    # Get current commit before update
-    OLD_COMMIT=$(cd "$SUBMODULE_PATH" && git rev-parse --short HEAD)
-
-    # Update submodule
+    # Update to latest on branch
     (
         cd "$SUBMODULE_PATH"
         git checkout "$VERSION"
         git pull origin "$VERSION"
     )
-
-    # Get new commit after update
-    NEW_COMMIT=$(cd "$SUBMODULE_PATH" && git rev-parse --short HEAD)
-
-    if [ "$OLD_COMMIT" == "$NEW_COMMIT" ]; then
-        log_info "  Already up to date ($OLD_COMMIT)"
-    else
-        log_success "  Updated: $OLD_COMMIT -> $NEW_COMMIT"
-    fi
 done
 
-log_success "Godot-CPP submodules updated!"
 echo ""
-log_warn "IMPORTANT: Dependencies have been updated!"
-log_warn "You must rebuild with --clean flag to use the new versions:"
-log_warn "  ./scripts/build-version.sh 4.4 --clean"
-log_warn "  ./scripts/build-version.sh 4.5 --clean"
+echo "Godot-CPP submodules updated"

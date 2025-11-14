@@ -79,52 +79,19 @@ if [ ! -d "$SUBMODULE_PATH" ]; then
     exit 1
 fi
 
-log_info "Pinning inkcpp submodule to $TAG..."
-
-# Get current tag or commit
-OLD_TAG=$(cd "$SUBMODULE_PATH" && git describe --tags --exact-match 2>/dev/null || echo "")
-if [ -z "$OLD_TAG" ]; then
-    OLD_TAG=$(cd "$SUBMODULE_PATH" && git rev-parse --short HEAD)
-    log_info "Currently on commit: $OLD_TAG"
-else
-    log_info "Currently on tag: $OLD_TAG"
-fi
-
-# Fetch all tags to make sure we have the latest
-log_info "Fetching tags from remote..."
+# Fetch and verify tag exists
 (cd "$SUBMODULE_PATH" && git fetch --tags)
 
-# Verify the tag exists
 if ! (cd "$SUBMODULE_PATH" && git rev-parse "$TAG" >/dev/null 2>&1); then
-    log_error "Tag '$TAG' does not exist in inkcpp repository"
-    echo ""
-    log_info "Available tags:"
+    log_error "Tag '$TAG' does not exist"
+    echo "Available tags:"
     (cd "$SUBMODULE_PATH" && git tag -l | tail -10)
     exit 1
 fi
 
 # Checkout the specified tag
-log_info "Checking out $TAG..."
-(
-    cd "$SUBMODULE_PATH"
-    git checkout "$TAG"
-)
-
-# Verify we're on the correct tag
-NEW_TAG=$(cd "$SUBMODULE_PATH" && git describe --tags --exact-match 2>/dev/null)
-
-if [ "$OLD_TAG" == "$NEW_TAG" ]; then
-    log_info "Already on $OLD_TAG"
-else
-    log_success "Pinned: $OLD_TAG -> $NEW_TAG"
-fi
+(cd "$SUBMODULE_PATH" && git checkout "$TAG")
 
 echo ""
-log_warn "IMPORTANT: The submodule change is not yet committed to the main repository."
-log_warn "To record this change, run:"
-echo ""
-echo "  git add libs/inkcpp"
-echo "  git commit -m \"Pin inkcpp to $NEW_TAG\""
-echo ""
-
-log_success "InkCPP submodule pinned to $TAG!"
+echo "InkCPP pinned to $TAG"
+echo "Commit this change: git add libs/inkcpp && git commit -m \"Pin inkcpp to $TAG\""

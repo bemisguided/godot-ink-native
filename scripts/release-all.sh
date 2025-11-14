@@ -59,57 +59,14 @@ cd "$PROJECT_ROOT"
 # Supported Godot versions
 VERSIONS=("4.4" "4.5")
 
-# Track results
-SUCCESS_COUNT=0
-FAILED_VERSIONS=()
-
-log_info "Creating release packages for all Godot versions..."
-
 # Build each version
 for VERSION in "${VERSIONS[@]}"; do
     echo ""
-    log_info "=========================================="
-    log_info "Processing Godot $VERSION"
-    log_info "=========================================="
-
-    if "$PROJECT_ROOT/scripts/release-version.sh" "$VERSION"; then
-        SUCCESS_COUNT=$((SUCCESS_COUNT + 1))
-        log_success "Godot $VERSION released successfully"
-    else
-        log_error "Failed to release Godot $VERSION"
-        FAILED_VERSIONS+=("$VERSION")
-    fi
+    "$PROJECT_ROOT/scripts/release-version.sh" "$VERSION" || log_error "Failed: Godot $VERSION"
 done
 
-# Summary
+# List created packages
 echo ""
-log_info "=========================================="
-log_info "Release Summary"
-log_info "=========================================="
-log_info "Successful releases: $SUCCESS_COUNT/${#VERSIONS[@]}"
-
-if [ ${#FAILED_VERSIONS[@]} -gt 0 ]; then
-    log_warn "Failed versions: ${FAILED_VERSIONS[*]}"
-fi
-
-# List all created packages
 if [ -d "release" ]; then
-    echo ""
-    log_info "Created packages:"
-    for PACKAGE in release/*.zip; do
-        if [ -f "$PACKAGE" ]; then
-            SIZE=$(du -h "$PACKAGE" | cut -f1)
-            echo "  - $(basename "$PACKAGE") ($SIZE)"
-        fi
-    done
-fi
-
-# Final result
-echo ""
-if [ ${#FAILED_VERSIONS[@]} -eq 0 ]; then
-    log_success "All releases created successfully!"
-    exit 0
-else
-    log_error "Some releases failed. See above for details."
-    exit 1
+    ls -lh release/*.zip 2>/dev/null || echo "No packages created"
 fi
