@@ -61,6 +61,11 @@ void InkStory::_bind_methods() {
 	ClassDB::bind_method(D_METHOD("get_variable", "name"), &InkStory::get_variable);
 	ClassDB::bind_method(D_METHOD("set_variable", "name", "value"), &InkStory::set_variable);
 
+	// External function methods
+	ClassDB::bind_method(D_METHOD("bind_external_function", "name", "function", "lookahead_safe"), &InkStory::bind_external_function, DEFVAL(true));
+	ClassDB::bind_method(D_METHOD("unbind_external_function", "name"), &InkStory::unbind_external_function);
+	ClassDB::bind_method(D_METHOD("has_external_function", "name"), &InkStory::has_external_function);
+
 	// Path methods
 	ClassDB::bind_method(D_METHOD("get_current_path"), &InkStory::get_current_path);
 
@@ -92,6 +97,47 @@ void InkStory::_update_choices() {
 	} catch (const std::exception& e) {
 		ERR_PRINT(String("Ink runtime error while updating choices: ") + String(e.what()));
 	}
+}
+
+ink::runtime::value InkStory::_external_function_bridge(const std::string& name, size_t argc, const ink::runtime::value* argv) {
+	// Look up the callable
+	auto it = _external_functions.find(name);
+	if (it == _external_functions.end()) {
+		ERR_PRINT(String("External function not found: ") + String(name.c_str()));
+		return ink::runtime::value();  // Return null
+	}
+
+	const Callable& callable = it->second;
+
+	// Convert ink arguments to Godot Variant array
+	// NOTE: InkCPP passes arguments in REVERSE order (stack-based)
+	// We need to reverse them before passing to the Callable
+	Array args;
+	for (int i = argc - 1; i >= 0; i--) {
+		args.push_back(InkUtils::ink_value_to_variant(argv[i]));
+	}
+
+	// Call the Callable
+	Variant result;
+	try {
+		result = callable.callv(args);
+	} catch (const std::exception& e) {
+		ERR_PRINT(String("External function '") + String(name.c_str()) + String("' threw exception: ") + String(e.what()));
+		return ink::runtime::value();  // Return null on error
+	}
+
+	// Convert result back to ink value
+	// Handle strings specially to ensure lifetime
+	if (result.get_type() == Variant::STRING) {
+		String str = result;
+		// Store the CharString to keep it alive until InkCPP copies the data
+		// InkCPP will copy this into its internal string_table during value construction
+		_external_string_storage.push_back(str.utf8());
+		return ink::runtime::value(_external_string_storage.back().get_data());
+	}
+
+	// For other types, use the utility helper
+	return InkUtils::variant_to_ink_value(result);
 }
 
 // ===== Story Loading Helper Methods =====
@@ -245,6 +291,9 @@ String InkStory::continue_story() {
 		// Update choices after continuation
 		_update_choices();
 
+		// Clear external function string storage (InkCPP has copied the strings by now)
+		_external_string_storage.clear();
+
 		return _current_text;
 	} catch (const std::exception& e) {
 		ERR_PRINT(String("Ink runtime error in continue_story(): ") + String(e.what()));
@@ -266,6 +315,9 @@ String InkStory::continue_story_maximally() {
 
 		// Update choices
 		_update_choices();
+
+		// Clear external function string storage (InkCPP has copied the strings by now)
+		_external_string_storage.clear();
 
 		return _current_text;
 	} catch (const std::exception& e) {
@@ -461,4 +513,43 @@ void InkStory::set_story_path(const String& path) {
 
 String InkStory::get_story_path() const {
 	return _story_path;
+}
+
+void InkStory::bind_external_function(const String& name, const Callable& function, bool lookahead_safe) {
+	if (!_runner) {
+		ERR_PRINT("Cannot bind external function: story not loaded");
+		return;
+	}
+
+	// Convert name to std::string for storage
+	std::string func_name = name.utf8().get_data();
+
+	// Store the Callable
+	_external_functions[func_name] = function;
+
+	// Bind to InkCPP runner with lambda wrapper
+	// The lambda captures 'this' and 'func_name' to call the bridge
+	_runner->bind(func_name.c_str(),
+		[this, func_name](size_t argc, const ink::runtime::value* argv) -> ink::runtime::value {
+			return _external_function_bridge(func_name, argc, argv);
+		},
+		lookahead_safe);
+}
+
+void InkStory::unbind_external_function(const String& name) {
+	std::string func_name = name.utf8().get_data();
+
+	// Remove from our map
+	auto it = _external_functions.find(func_name);
+	if (it != _external_functions.end()) {
+		_external_functions.erase(it);
+	}
+
+	// Note: InkCPP doesn't provide an unbind API, so the binding remains in the runner
+	// However, _external_function_bridge will return null if the function isn't in our map
+}
+
+bool InkStory::has_external_function(const String& name) const {
+	std::string func_name = name.utf8().get_data();
+	return _external_functions.find(func_name) != _external_functions.end();
 }

@@ -63,6 +63,14 @@ None.
 | Variant | **get_variable** ( String name ) const |
 | void | **set_variable** ( String name, Variant value ) |
 
+#### External Functions
+
+| Return Type | Method |
+|-------------|--------|
+| void | **bind_external_function** ( String name, Callable function, bool lookahead_safe = true ) |
+| void | **unbind_external_function** ( String name ) |
+| bool | **has_external_function** ( String name ) const |
+
 #### Navigation
 
 | Return Type | Method |
@@ -228,6 +236,159 @@ Sets the value of a story variable. Supports int, float, bool, and String types.
 **Parameters:**
 - `name` (String): The name of the variable to set
 - `value` (Variant): The new value (int, float, bool, or String)
+
+---
+
+### External Function Methods
+
+External functions allow you to call GDScript code from within Ink stories, enabling powerful integration between game logic and narrative content.
+
+---
+
+#### void **bind_external_function** ( String name, Callable function, bool lookahead_safe = true )
+
+Binds a GDScript function or lambda to be callable from Ink. The function will be invoked when the Ink story calls the external function by name.
+
+**Parameters:**
+- `name` (String): Name of the external function as declared in Ink (e.g., `"get_player_name"`)
+- `function` (Callable): GDScript function or lambda to execute when called from Ink
+- `lookahead_safe` (bool): Whether the function is safe for lookahead evaluation (default: `true`)
+  - `true`: Function is pure/read-only with no side effects (safe for Ink's lookahead)
+  - `false`: Function has side effects and should only be called during actual execution
+
+**Supported Parameter Types:**
+- `bool`: Boolean values
+- `int`: Integer numbers
+- `float`: Floating-point numbers
+- `String`: Text strings
+
+**Supported Return Types:**
+- `bool`: Boolean values
+- `int`: Integer numbers
+- `float`: Floating-point numbers
+- `String`: Text strings
+- `void`/`null`: For functions with no return value
+
+**Example:**
+
+Ink story (`story.ink`):
+```ink
+EXTERNAL get_player_name()
+EXTERNAL roll_dice()
+EXTERNAL add(a, b)
+EXTERNAL concat(str1, str2)
+
+Your name is: {get_player_name()}
+You rolled: {roll_dice()}
+Result: {add(5, 3)}
+Message: {concat("Hello", " World")}
+```
+
+GDScript:
+```gdscript
+var story = InkStory.new()
+story.load_story("res://story.ink.json")
+
+# Zero-argument function
+story.bind_external_function("get_player_name", func():
+    return "Hero"
+)
+
+# Random number (not lookahead safe due to randomness)
+story.bind_external_function("roll_dice", func():
+    return randi() % 6 + 1
+, false)
+
+# Multi-argument function
+story.bind_external_function("add", func(a, b):
+    return a + b
+)
+
+# String concatenation
+story.bind_external_function("concat", func(s1, s2):
+    return str(s1) + str(s2)
+)
+
+# Execute story
+var text = story.continue_story_maximally()
+print(text)
+# Output:
+# Your name is: Hero
+# You rolled: 4
+# Result: 8
+# Message: Hello World
+```
+
+**Game Integration Example:**
+```gdscript
+# Access game state from Ink
+story.bind_external_function("get_gold", func():
+    return GameState.gold
+)
+
+story.bind_external_function("has_item", func(item_name):
+    return item_name in GameState.inventory
+)
+
+# Call game functions with side effects
+story.bind_external_function("add_item", func(item_name):
+    GameState.inventory.append(item_name)
+    print("Added: ", item_name)
+, false)  # false = has side effects
+
+story.bind_external_function("play_sound", func(sound_name):
+    AudioPlayer.play(sound_name)
+, false)
+```
+
+**Notes:**
+- Functions must be bound BEFORE the story begins executing
+- Use `lookahead_safe=false` for functions that:
+  - Modify game state
+  - Generate random numbers
+  - Play audio/visual effects
+  - Trigger any side effects
+- Functions can be rebound at any time to change behavior
+
+---
+
+#### void **unbind_external_function** ( String name )
+
+Removes a previously bound external function. If the story attempts to call an unbound function, an error will be logged and the story will continue with a null return value.
+
+**Parameters:**
+- `name` (String): Name of the function to unbind
+
+**Example:**
+```gdscript
+# Bind a function
+story.bind_external_function("get_score", func(): return player_score)
+
+# Later, unbind it
+story.unbind_external_function("get_score")
+
+# Rebind with new implementation
+story.bind_external_function("get_score", func(): return new_score_calculation())
+```
+
+---
+
+#### bool **has_external_function** ( String name ) const
+
+Checks whether an external function is currently bound.
+
+**Parameters:**
+- `name` (String): Name of the function to check
+
+**Returns:** bool - `true` if the function is bound, `false` otherwise
+
+**Example:**
+```gdscript
+if not story.has_external_function("get_player_level"):
+    story.bind_external_function("get_player_level", func():
+        return PlayerData.level
+    )
+```
 
 ---
 

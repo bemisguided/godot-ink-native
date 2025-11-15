@@ -282,6 +282,84 @@ namespace ink::runtime {
 - Error handling: Check `compilation_results.errors`, print to Godot console
 - Warnings: Print but don't fail compilation
 
+### External Functions
+
+External functions allow GDScript to be called from Ink stories. Implemented via bridge pattern.
+
+**Architecture:**
+```cpp
+// Storage
+std::unordered_map<std::string, Callable> _external_functions;
+std::vector<CharString> _external_string_storage;
+
+// Bridge function (called by InkCPP when Ink invokes external function)
+ink::runtime::value _external_function_bridge(
+    const std::string& name,
+    size_t argc,
+    const ink::runtime::value* argv);
+```
+
+**Key Implementation Details:**
+
+1. **Binding Process:**
+   - `bind_external_function()` stores Callable in `_external_functions` map
+   - Registers lambda with InkCPP that calls `_external_function_bridge()`
+   - Lambda captures `this` and `func_name` to bridge to GDScript
+
+2. **Argument Order:**
+   - **CRITICAL:** InkCPP passes arguments in REVERSE order (stack-based)
+   - Must reverse arguments before passing to Callable:
+   ```cpp
+   for (int i = argc - 1; i >= 0; i--) {
+       args.push_back(InkUtils::ink_value_to_variant(argv[i]));
+   }
+   ```
+
+3. **String Return Lifetime:**
+   - **CRITICAL:** String return values must remain valid during InkCPP's copy operation
+   - Store CharString in `_external_string_storage` vector:
+   ```cpp
+   if (result.get_type() == Variant::STRING) {
+       _external_string_storage.push_back(str.utf8());
+       return ink::runtime::value(_external_string_storage.back().get_data());
+   }
+   ```
+   - Clear storage after `continue_story()` and `continue_story_maximally()` complete
+   - InkCPP copies strings into its internal string_table during value construction
+
+4. **Type Support:**
+   - **Parameters:** bool, int, float, string
+   - **Returns:** bool, int, float, string, void/null
+   - Uses `InkUtils::ink_value_to_variant()` and `variant_to_ink_value()` for conversions
+
+5. **Error Handling:**
+   - Unbound functions log error and return null value
+   - Exceptions caught and logged
+   - Story continues executing even with errors
+
+**Example Usage:**
+```cpp
+// GDScript side
+story.bind_external_function("get_player_name", func(): return "Hero")
+story.bind_external_function("add", func(a, b): return a + b)
+story.bind_external_function("concat", func(s1, s2): return str(s1) + str(s2))
+
+// Ink side
+EXTERNAL get_player_name()
+EXTERNAL add(a, b)
+EXTERNAL concat(s1, s2)
+
+Your name is: {get_player_name()}
+Math: {add(5, 3)}
+String: {concat("Hello", " World")}
+```
+
+**Common Pitfalls:**
+- Forgetting to reverse arguments → functions receive parameters backwards
+- Not storing string CharString → dangling pointer, empty output
+- Not clearing string storage → memory bloat over time
+- Binding after story starts → functions not registered in time
+
 ## 5. Build System
 
 ### ⚠️ ALWAYS USE SCRIPTS - See Section 2
@@ -534,9 +612,16 @@ ink_value = ink::runtime::value(_string_storage.back().get_data());
 ### Not Yet Implemented
 
 - **InkList wrapper:** Complex list operations (add/remove/contains)
-- **External functions:** Bind GDScript functions callable from Ink
 - **State save/load:** Serialize/deserialize story state
 - **Variable observers:** Callbacks when variables change
+
+### Implemented Features
+
+- ✅ **External functions:** Bind GDScript functions callable from Ink (v0.1.0)
+  - Supports arbitrary argument counts
+  - Type conversion for bool, int, float, string
+  - Lookahead safety control
+  - Full error handling
 
 ### Adding New Wrapper Classes
 

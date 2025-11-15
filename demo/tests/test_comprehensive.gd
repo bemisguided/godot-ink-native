@@ -20,6 +20,10 @@ func _ready():
 		get_tree().quit(1)
 		return
 
+	# Compile external functions test story
+	if not _compile_external_functions_story():
+		print("❌ Failed to compile external functions test story - skipping external function tests")
+
 	# Run all test categories
 	test_loading_and_compilation()
 	test_resource_properties()
@@ -27,6 +31,7 @@ func _ready():
 	test_choice_system()
 	test_path_navigation()
 	test_variable_operations()
+	test_external_functions()
 	# test_tag_hierarchy()  # TODO: Implement get_global_tags/get_knot_tags API
 	test_state_management()
 	test_error_handling()
@@ -62,6 +67,18 @@ func _compile_test_story() -> bool:
 	var success = GDInkCompiler.compile("res://examples/test_story.ink")
 	if success:
 		print("  ✅ Test story compiled successfully")
+		print("")
+		return true
+	else:
+		print("  ❌ Compilation failed")
+		print("")
+		return false
+
+func _compile_external_functions_story() -> bool:
+	print("[SETUP] Compiling external functions story...")
+	var success = GDInkCompiler.compile("res://examples/external_functions.ink")
+	if success:
+		print("  ✅ External functions story compiled successfully")
 		print("")
 		return true
 	else:
@@ -423,7 +440,125 @@ func test_variable_operations():
 
 	print("")
 
-# ===== TEST CATEGORY 7: TAG HIERARCHY =====
+# ===== TEST CATEGORY 7: EXTERNAL FUNCTIONS =====
+
+func test_external_functions():
+	start_test("External Functions")
+
+	var story = InkStory.new()
+	story.load_story("res://examples/external_functions.ink.json")
+
+	# Test 1: Bind zero-argument function
+	story.bind_external_function("get_player_name", func(): return "TestHero")
+	assert_true(story.has_external_function("get_player_name"), "has_external_function() returns true after binding")
+
+	# Test 2: Bind function with return value
+	story.bind_external_function("roll_dice", func(): return randi() % 6 + 1)
+	assert_true(story.has_external_function("roll_dice"), "roll_dice bound successfully")
+
+	# Test 3: Bind multi-argument function
+	story.bind_external_function("add", func(a, b): return a + b)
+	story.bind_external_function("multiply", func(x, y): return x * y)
+	assert_true(story.has_external_function("add"), "add bound successfully")
+	assert_true(story.has_external_function("multiply"), "multiply bound successfully")
+
+	# Test 4: Bind string concatenation function
+	story.bind_external_function("concat", func(s1, s2): return str(s1) + str(s2))
+	assert_true(story.has_external_function("concat"), "concat bound successfully")
+
+	# Test 5: Bind boolean return function
+	story.bind_external_function("is_lucky", func(): return true)
+	assert_true(story.has_external_function("is_lucky"), "is_lucky bound successfully")
+
+	# Test 6: Bind void function
+	# Use array to allow lambda to modify the value (GDScript captures by value)
+	var void_called = [false]
+	story.bind_external_function("void_function", func(): void_called[0] = true)
+	assert_true(story.has_external_function("void_function"), "void_function bound successfully")
+
+	# Test 7: Execute story with external functions
+	var text = story.continue_story_maximally()
+	assert_contains(text, "TestHero", "External function get_player_name() called successfully")
+	assert_contains(text, "World", "External function concat() called successfully")
+
+	# Test 8: Verify void function was called
+	assert_true(void_called[0], "Void external function executed")
+
+	# Test 9: Test external function in choices
+	story.reset_state()
+
+	# Rebind functions with new values
+	story.bind_external_function("get_player_name", func(): return "NewHero")
+	story.bind_external_function("roll_dice", func(): return 6)
+	story.bind_external_function("add", func(a, b): return a + b)
+	story.bind_external_function("multiply", func(x, y): return x * y)
+	story.bind_external_function("concat", func(s1, s2): return str(s1) + str(s2))
+	story.bind_external_function("is_lucky", func(): return false)
+	story.bind_external_function("void_function", func(): pass)
+
+	story.continue_story_maximally()
+
+	# Should be at hub with choices
+	assert_true(story.get_current_choice_count() > 0, "At hub with choices")
+
+	# Test 10: Choose and test zero-arg function option
+	story.choose_choice_index(0)  # Test zero-arg function
+	text = story.continue_story()
+	assert_contains(text, "NewHero", "Rebound function returns new value")
+
+	# Test 11: Test unbind_external_function
+	story.reset_state()
+	story.unbind_external_function("get_player_name")
+	assert_true(story.has_external_function("get_player_name") == false, "unbind_external_function() removes binding")
+
+	# Test 12: Unbound function behavior (should print error but not crash)
+	text = story.continue_story()
+	assert_not_null(text, "Story continues even with unbound external function")
+
+	# Test 13: Rebind after unbind
+	story.bind_external_function("get_player_name", func(): return "ReboundHero")
+	assert_true(story.has_external_function("get_player_name"), "Function can be rebound after unbinding")
+
+	# Test 14: Test with lookahead_safe parameter
+	var side_effect_count = 0
+	story.bind_external_function("side_effect_func", func():
+		side_effect_count += 1
+		return side_effect_count
+	, false)  # Not lookahead safe
+	assert_true(story.has_external_function("side_effect_func"), "Function with side effects bound")
+
+	# Test 15: Different return types
+	story.reset_state()
+	story.bind_external_function("get_player_name", func(): return "TypeTest")
+	story.bind_external_function("roll_dice", func(): return 42)  # INT
+	story.bind_external_function("add", func(a, b): return a + b)  # INT
+	story.bind_external_function("multiply", func(x, y): return x * y)  # INT
+	story.bind_external_function("concat", func(s1, s2): return str(s1) + str(s2))  # STRING
+	story.bind_external_function("is_lucky", func(): return true)  # BOOL
+	story.bind_external_function("void_function", func(): pass)  # VOID
+
+	text = story.continue_story_maximally()
+	assert_contains(text, "TypeTest", "String return type works")
+	assert_contains(text, "42", "Int return type works")
+	assert_contains(text, "true", "Bool return type works")
+
+	# Test 16: Function not bound
+	story.reset_state()
+	story.unbind_external_function("get_player_name")
+	story.unbind_external_function("roll_dice")
+	story.unbind_external_function("add")
+	story.unbind_external_function("multiply")
+	story.unbind_external_function("concat")
+	story.unbind_external_function("is_lucky")
+	story.unbind_external_function("void_function")
+
+	# Story should handle missing functions gracefully (errors logged but no crash)
+	text = story.continue_story()
+	assert_not_null(text, "Story handles unbound functions gracefully")
+
+	print("")
+
+# ===== TEST CATEGORY 8: TAG HIERARCHY =====
 # TODO: Uncomment when get_global_tags/get_knot_tags API is implemented
 
 #func test_tag_hierarchy():
@@ -462,7 +597,7 @@ func test_variable_operations():
 #
 #	print("")
 
-# ===== TEST CATEGORY 8: STATE MANAGEMENT =====
+# ===== TEST CATEGORY 9: STATE MANAGEMENT =====
 
 func test_state_management():
 	start_test("State Management")
@@ -507,7 +642,7 @@ func test_state_management():
 
 	print("")
 
-# ===== TEST CATEGORY 9: ERROR HANDLING =====
+# ===== TEST CATEGORY 10: ERROR HANDLING =====
 
 func test_error_handling():
 	start_test("Error Handling")
@@ -554,7 +689,7 @@ func test_error_handling():
 
 	print("")
 
-# ===== TEST CATEGORY 10: EDGE CASES =====
+# ===== TEST CATEGORY 11: EDGE CASES =====
 
 func test_edge_cases():
 	start_test("Edge Cases")
@@ -598,7 +733,7 @@ func test_edge_cases():
 
 	print("")
 
-# ===== TEST CATEGORY 11: TEXT CACHING =====
+# ===== TEST CATEGORY 12: TEXT CACHING =====
 
 func test_text_caching():
 	start_test("Text Caching")

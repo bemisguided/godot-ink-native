@@ -61,6 +61,10 @@ ink::runtime::value variant_to_ink_value(const Variant& var) {
 	ink::runtime::value ink_value;
 
 	switch (var.get_type()) {
+		case Variant::NIL:
+			// Nil/null -> return empty/default ink value (for void functions)
+			return ink::runtime::value();
+
 		case Variant::BOOL:
 			ink_value = ink::runtime::value((bool)var);
 			break;

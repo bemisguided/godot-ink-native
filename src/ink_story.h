@@ -11,6 +11,7 @@
 
 #include <godot_cpp/classes/resource.hpp>
 #include <godot_cpp/variant/array.hpp>
+#include <godot_cpp/variant/callable.hpp>
 #include <godot_cpp/variant/packed_byte_array.hpp>
 #include <godot_cpp/variant/packed_string_array.hpp>
 #include <godot_cpp/variant/string.hpp>
@@ -20,6 +21,7 @@
 #include <story.h>
 #include <types.h>
 
+#include <unordered_map>
 #include <vector>
 
 using namespace godot;
@@ -67,8 +69,18 @@ private:
 	// Cached current text from last continue
 	String _current_text;
 
+	// External functions bound from GDScript
+	std::unordered_map<std::string, Callable> _external_functions;
+
+	// Temporary storage for string returns from external functions
+	// Ensures string data remains valid during InkCPP's copy operation
+	std::vector<CharString> _external_string_storage;
+
 	// Helper methods
 	void _update_choices();
+
+	// External function bridge (called by InkCPP when Ink invokes external function)
+	ink::runtime::value _external_function_bridge(const std::string& name, size_t argc, const ink::runtime::value* argv);
 
 	// Story loading helpers
 	String _resolve_resource_path(const String& res_path);
@@ -197,6 +209,47 @@ public:
 	 * @param value New value (int, float, bool, or string)
 	 */
 	void set_variable(const String& name, const Variant& value);
+
+	// ===== External Functions =====
+
+	/**
+	 * @brief Bind a GDScript callable as an external function
+	 *
+	 * Allows Ink scripts to call GDScript functions via EXTERNAL declarations.
+	 * The callable can be a lambda, method reference, or any Callable type.
+	 *
+	 * @param name Function name (must match EXTERNAL declaration in Ink)
+	 * @param function Callable to invoke (receives Variant args, returns Variant)
+	 * @param lookahead_safe If true, allows glue lookahead past this function.
+	 *                       Set false for functions with side effects (audio, animations, etc.)
+	 *
+	 * Example:
+	 * @code
+	 * # In Ink story:
+	 * EXTERNAL get_player_name()
+	 * EXTERNAL roll_dice()
+	 * EXTERNAL add(a, b)
+	 *
+	 * # In GDScript:
+	 * story.bind_external_function("get_player_name", func(): return player.name)
+	 * story.bind_external_function("roll_dice", func(): return randi() % 6 + 1)
+	 * story.bind_external_function("add", func(a, b): return a + b)
+	 * @endcode
+	 */
+	void bind_external_function(const String& name, const Callable& function, bool lookahead_safe = true);
+
+	/**
+	 * @brief Remove an external function binding
+	 * @param name Function name to unbind
+	 */
+	void unbind_external_function(const String& name);
+
+	/**
+	 * @brief Check if an external function is bound
+	 * @param name Function name
+	 * @return true if function is bound
+	 */
+	bool has_external_function(const String& name) const;
 
 	// ===== Path/Navigation =====
 
