@@ -56,37 +56,9 @@ Variant ink_value_to_variant(const ink::runtime::value& ink_val) {
 	return Variant();
 }
 
-ink::runtime::value variant_to_ink_value(const Variant& var) {
-	// Convert primitive types only (strings handled directly in ink_story.cpp)
-	ink::runtime::value ink_value;
-
-	switch (var.get_type()) {
-		case Variant::NIL:
-			// Nil/null -> return empty/default ink value (for void functions)
-			return ink::runtime::value();
-
-		case Variant::BOOL:
-			ink_value = ink::runtime::value((bool)var);
-			break;
-
-		case Variant::INT:
-			ink_value = ink::runtime::value((int32_t)(int64_t)var);
-			break;
-
-		case Variant::FLOAT:
-			ink_value = ink::runtime::value((float)(double)var);
-			break;
-
-		case Variant::STRING:
-			ERR_PRINT("String conversion should be handled directly in ink_story.cpp");
-			return ink::runtime::value();
-
-		default:
-			ERR_PRINT(String("Unsupported variable type: ") + Variant::get_type_name(var.get_type()));
-			return ink::runtime::value();
-	}
-
-	return ink_value;
+InkValue variant_to_ink_value(const Variant& var) {
+	// Factory function - delegates to InkValue constructor which handles all types including strings
+	return InkValue(var);
 }
 
 } // namespace InkUtils

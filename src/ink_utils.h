@@ -7,6 +7,8 @@
 #ifndef INK_UTILS_H
 #define INK_UTILS_H
 
+#include "ink_value.h"
+
 #include <godot_cpp/variant/string.hpp>
 #include <godot_cpp/variant/variant.hpp>
 #include <types.h>
@@ -54,21 +56,29 @@ String resolve_resource_path(const String& res_path);
 Variant ink_value_to_variant(const ink::runtime::value& ink_val);
 
 /**
- * @brief Convert a Godot Variant to an Ink runtime value
+ * @brief Convert a Godot Variant to an InkValue (RAII wrapper for ink::runtime::value)
  *
- * Converts from Godot's Variant type to InkCPP's internal value type.
- * Supports: BOOL, INT, FLOAT variants only.
+ * Factory function that converts from Godot's Variant type to InkValue, which
+ * automatically manages string lifetime using RAII principles.
  *
- * Note: STRING variants are NOT handled here due to lifetime requirements.
- * Strings must be handled directly in the calling code to ensure the CharString
- * stays alive during the InkCPP copy operation. See InkStory::set_variable() for example.
+ * Supported types: NIL, BOOL, INT, FLOAT, STRING
+ * - Primitive types are converted directly
+ * - String types have their CharString data owned by the returned InkValue
+ * - Other types will print an error and return an empty ink value
  *
- * Other types will print an error and return an empty ink::runtime::value.
+ * The returned InkValue keeps string data alive until it's destroyed, ensuring
+ * safe usage with InkCPP APIs that copy the string data synchronously.
  *
  * @param var The Godot Variant to convert
- * @return Ink value containing the converted data
+ * @return InkValue containing the converted data (with automatic string lifetime management)
+ *
+ * Example:
+ * @code
+ * auto ink_value = InkUtils::variant_to_ink_value(variant);
+ * _globals->set(name, ink_value.get());  // Safe - string data valid until ink_value destroyed
+ * @endcode
  */
-ink::runtime::value variant_to_ink_value(const Variant& var);
+InkValue variant_to_ink_value(const Variant& var);
 
 } // namespace InkUtils
 

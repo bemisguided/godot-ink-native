@@ -24,58 +24,58 @@ None.
 
 #### Story Loading
 
-| Return Type | Method |
-|-------------|--------|
-| bool | **load_story** ( String story_path ) |
-| void | **reset_state** ( ) |
-| bool | **is_loaded** ( ) const |
+| Return Type | Method                               |
+| ----------- | ------------------------------------ |
+| bool        | **load_story** ( String story_path ) |
+| void        | **reset_state** ( )                  |
+| bool        | **is_loaded** ( ) const              |
 
 #### Story Execution
 
-| Return Type | Method |
-|-------------|--------|
-| String | **continue_story** ( ) |
-| String | **continue_story_maximally** ( ) |
-| bool | **can_continue** ( ) const |
-| String | **get_current_text** ( ) const |
+| Return Type | Method                           |
+| ----------- | -------------------------------- |
+| String      | **continue_story** ( )           |
+| String      | **continue_story_maximally** ( ) |
+| bool        | **can_continue** ( ) const       |
+| String      | **get_current_text** ( ) const   |
 
 #### Choices
 
-| Return Type | Method |
-|-------------|--------|
-| Array | **get_current_choices** ( ) const |
-| int | **get_current_choice_count** ( ) const |
-| void | **choose_choice_index** ( int index ) |
-| bool | **choose_path_string** ( String path ) |
+| Return Type | Method                                 |
+| ----------- | -------------------------------------- |
+| Array       | **get_current_choices** ( ) const      |
+| int         | **get_current_choice_count** ( ) const |
+| void        | **choose_choice_index** ( int index )  |
+| bool        | **choose_path_string** ( String path ) |
 
 #### Tags
 
-| Return Type | Method |
-|-------------|--------|
+| Return Type       | Method                         |
+| ----------------- | ------------------------------ |
 | PackedStringArray | **get_current_tags** ( ) const |
-| PackedStringArray | **get_global_tags** ( ) const |
-| PackedStringArray | **get_knot_tags** ( ) const |
+| PackedStringArray | **get_global_tags** ( ) const  |
+| PackedStringArray | **get_knot_tags** ( ) const    |
 
 #### Variables
 
-| Return Type | Method |
-|-------------|--------|
-| Variant | **get_variable** ( String name ) const |
-| void | **set_variable** ( String name, Variant value ) |
+| Return Type | Method                                          |
+| ----------- | ----------------------------------------------- |
+| Variant     | **get_variable** ( String name ) const          |
+| void        | **set_variable** ( String name, Variant value ) |
 
 #### External Functions
 
-| Return Type | Method |
-|-------------|--------|
-| void | **bind_external_function** ( String name, Callable function, bool lookahead_safe = true ) |
-| void | **unbind_external_function** ( String name ) |
-| bool | **has_external_function** ( String name ) const |
+| Return Type | Method                                                                                    |
+| ----------- | ----------------------------------------------------------------------------------------- |
+| void        | **bind_external_function** ( String name, Callable function, bool lookahead_safe = true ) |
+| void        | **unbind_external_function** ( String name )                                              |
+| bool        | **has_external_function** ( String name ) const                                           |
 
 #### Navigation
 
-| Return Type | Method |
-|-------------|--------|
-| String | **get_current_path** ( ) const |
+| Return Type | Method                         |
+| ----------- | ------------------------------ |
+| String      | **get_current_path** ( ) const |
 
 ---
 
@@ -418,20 +418,20 @@ The `InkChoice` class encapsulates data about a choice presented to the player. 
 
 ### Properties
 
-| Type | Property | Default |
-|------|----------|---------|
-| int | **index** | 0 |
-| String | **text** | `""` |
-| PackedStringArray | **tags** | `[]` |
+| Type              | Property  | Default |
+| ----------------- | --------- | ------- |
+| int               | **index** | 0       |
+| String            | **text**  | `""`    |
+| PackedStringArray | **tags**  | `[]`    |
 
 ### Methods
 
-| Return Type | Method |
-|-------------|--------|
-| int | **get_index** ( ) const |
-| String | **get_text** ( ) const |
-| PackedStringArray | **get_tags** ( ) const |
-| bool | **has_tags** ( ) const |
+| Return Type       | Method                  |
+| ----------------- | ----------------------- |
+| int               | **get_index** ( ) const |
+| String            | **get_text** ( ) const  |
+| PackedStringArray | **get_tags** ( ) const  |
+| bool              | **has_tags** ( ) const  |
 
 ---
 
@@ -487,9 +487,9 @@ None.
 
 ### Methods
 
-| Return Type | Method |
-|-------------|--------|
-| bool | **compile_json_file** ( String json_res_path, String binary_res_path ) static |
+| Return Type | Method                                                                        |
+| ----------- | ----------------------------------------------------------------------------- |
+| bool        | **compile_json_file** ( String json_res_path, String binary_res_path ) static |
 
 ---
 

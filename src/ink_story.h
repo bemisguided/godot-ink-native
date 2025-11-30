@@ -8,6 +8,7 @@
 #define INK_STORY_H
 
 #include "ink_choice.h"
+#include "ink_value.h"
 
 #include <godot_cpp/classes/resource.hpp>
 #include <godot_cpp/variant/array.hpp>
@@ -72,9 +73,9 @@ private:
 	// External functions bound from GDScript
 	std::unordered_map<std::string, Callable> _external_functions;
 
-	// Temporary storage for string returns from external functions
-	// Ensures string data remains valid during InkCPP's copy operation
-	std::vector<CharString> _external_string_storage;
+	// Temporary storage for external function return values
+	// Keeps InkValue objects (and their owned CharStrings) alive until InkCPP copies the data
+	std::vector<InkValue> _external_value_storage;
 
 	// Helper methods
 	void _update_choices();

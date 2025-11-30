@@ -126,18 +126,10 @@ ink::runtime::value InkStory::_external_function_bridge(const std::string& name,
 		return ink::runtime::value();  // Return null on error
 	}
 
-	// Convert result back to ink value
-	// Handle strings specially to ensure lifetime
-	if (result.get_type() == Variant::STRING) {
-		String str = result;
-		// Store the CharString to keep it alive until InkCPP copies the data
-		// InkCPP will copy this into its internal string_table during value construction
-		_external_string_storage.push_back(str.utf8());
-		return ink::runtime::value(_external_string_storage.back().get_data());
-	}
-
-	// For other types, use the utility helper
-	return InkUtils::variant_to_ink_value(result);
+	// Convert result using InkValue wrapper and store it
+	// Store the InkValue in vector to keep CharString alive until InkCPP copies the data
+	_external_value_storage.push_back(InkUtils::variant_to_ink_value(result));
+	return _external_value_storage.back().get();
 }
 
 // ===== Story Loading Helper Methods =====
@@ -291,8 +283,8 @@ String InkStory::continue_story() {
 		// Update choices after continuation
 		_update_choices();
 
-		// Clear external function string storage (InkCPP has copied the strings by now)
-		_external_string_storage.clear();
+		// Clear external function value storage (InkCPP has copied the data by now)
+		_external_value_storage.clear();
 
 		return _current_text;
 	} catch (const std::exception& e) {
@@ -316,8 +308,8 @@ String InkStory::continue_story_maximally() {
 		// Update choices
 		_update_choices();
 
-		// Clear external function string storage (InkCPP has copied the strings by now)
-		_external_string_storage.clear();
+		// Clear external function value storage (InkCPP has copied the data by now)
+		_external_value_storage.clear();
 
 		return _current_text;
 	} catch (const std::exception& e) {
@@ -466,18 +458,9 @@ void InkStory::set_variable(const String& name, const Variant& value) {
 	CharString name_utf8 = name.utf8();
 	const char* var_name = name_utf8.get_data();
 
-	// Handle strings directly to ensure CharString stays alive during _globals->set()
-	if (value.get_type() == Variant::STRING) {
-		String str = value;
-		CharString str_utf8 = str.utf8();
-		// InkCPP copies the string data into its internal string_table during set()
-		ink::runtime::value ink_value = ink::runtime::value(str_utf8.get_data());
-		_globals->set<ink::runtime::value>(var_name, ink_value);
-	} else {
-		// Use helper for primitive types (no lifetime issues)
-		ink::runtime::value ink_value = InkUtils::variant_to_ink_value(value);
-		_globals->set<ink::runtime::value>(var_name, ink_value);
-	}
+	// Convert value using InkValue wrapper (handles all types including strings with RAII)
+	auto ink_value = InkUtils::variant_to_ink_value(value);
+	_globals->set<ink::runtime::value>(var_name, ink_value.get());
 }
 
 String InkStory::get_current_path() const {

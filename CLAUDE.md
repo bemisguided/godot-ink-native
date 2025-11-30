@@ -294,7 +294,7 @@ External functions allow GDScript to be called from Ink stories. Implemented via
 ```cpp
 // Storage
 std::unordered_map<std::string, Callable> _external_functions;
-std::vector<CharString> _external_string_storage;
+std::vector<InkValue> _external_value_storage;  // RAII storage for return values
 
 // Bridge function (called by InkCPP when Ink invokes external function)
 ink::runtime::value _external_function_bridge(
@@ -319,17 +319,15 @@ ink::runtime::value _external_function_bridge(
    }
    ```
 
-3. **String Return Lifetime:**
-   - **CRITICAL:** String return values must remain valid during InkCPP's copy operation
-   - Store CharString in `_external_string_storage` vector:
+3. **Return Value Handling:**
+   - All return types handled uniformly via `InkValue` wrapper
+   - Store InkValue in `_external_value_storage` to keep strings alive:
    ```cpp
-   if (result.get_type() == Variant::STRING) {
-       _external_string_storage.push_back(str.utf8());
-       return ink::runtime::value(_external_string_storage.back().get_data());
-   }
+   _external_value_storage.push_back(InkUtils::variant_to_ink_value(result));
+   return _external_value_storage.back().get();
    ```
-   - Clear storage after `continue_story()` and `continue_story_maximally()` complete
-   - InkCPP copies strings into its internal string_table during value construction
+   - Storage cleared after `continue_story()` and `continue_story_maximally()` complete
+   - No special-case string handling needed - RAII manages lifetime automatically
 
 4. **Type Support:**
    - **Parameters:** bool, int, float, string
@@ -360,8 +358,6 @@ String: {concat("Hello", " World")}
 
 **Common Pitfalls:**
 - Forgetting to reverse arguments → functions receive parameters backwards
-- Not storing string CharString → dangling pointer, empty output
-- Not clearing string storage → memory bloat over time
 - Binding after story starts → functions not registered in time
 
 ## 5. Build System
@@ -596,19 +592,42 @@ godot --headless --path demo --script tests/test_basic.gd
 
 ### String Handling
 
-**WARNING:** String variable lifetime issue in `set_variable()`:
+**InkValue RAII Wrapper:**
+
+The codebase uses an `InkValue` wrapper class to solve the string lifetime problem when converting Godot Variant to `ink::runtime::value`.
+
+**The Problem:**
+`ink::runtime::value` only stores a `const char*` pointer. The actual string data must remain valid until InkCPP copies it into its internal `string_table`.
+
+**The Solution:**
 ```cpp
-// Current implementation (potential issue):
-String str = value;
-ink_value = ink::runtime::value(str.utf8().get_data());
-// str.utf8() is temporary - pointer may not remain valid!
+// InkValue owns the CharString, keeping it alive via RAII
+auto ink_value = InkUtils::variant_to_ink_value(variant);
+_globals->set(name, ink_value.get());
+// CharString stays valid until ink_value destroyed (end of scope)
 ```
 
-**TODO:** Store string data in class member to ensure lifetime:
+**Implementation:**
+- `InkValue` class stores both `ink::runtime::value` and `CharString`
+- Created via factory function: `InkUtils::variant_to_ink_value()`
+- Automatic lifetime management - no manual storage needed
+- Eliminates scattered "if string" checks
+
+**Usage Patterns:**
 ```cpp
-// Better approach:
-_string_storage.push_back(str.utf8());
-ink_value = ink::runtime::value(_string_storage.back().get_data());
+// Local scope - automatic cleanup
+void set_variable(const String& name, const Variant& value) {
+    auto ink_value = InkUtils::variant_to_ink_value(value);
+    _globals->set(name, ink_value.get());
+    // ink_value destroyed after set() completes - safe
+}
+
+// External functions - stored until processing complete
+ink::runtime::value _external_function_bridge(...) {
+    _external_value_storage.push_back(InkUtils::variant_to_ink_value(result));
+    return _external_value_storage.back().get();
+    // Storage cleared after continue_story() completes
+}
 ```
 
 ## 8. Future Extensions
