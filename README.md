@@ -173,7 +173,7 @@ To test in the demo project:
 
 ```bash
 # 1. Extract release package to demo
-./scripts/test-setup.sh 4.4
+./scripts/validate-setup.sh 4.4
 
 # 2. IMPORTANT: Open the project in Godot editor to register the extension
 #    GDExtensions in Godot 4.x must be registered via the editor first
@@ -182,7 +182,7 @@ godot --editor --path demo
 # 3. After the editor opens and loads the project, close it
 
 # 4. Now you can run headless tests
-./scripts/test-run.sh
+./scripts/validate-run.sh
 ```
 
 **Why the editor step?** Godot 4.x GDExtensions are registered when the project is first opened in the editor. This creates the `.godot/` cache directory with extension metadata. Headless execution relies on this cached data.
@@ -230,8 +230,8 @@ The `scripts/` directory contains convenience wrappers for common development ta
 ```bash
 # Quick build and test
 ./scripts/build-version.sh 4.4          # Build for Godot 4.4
-./scripts/test-setup.sh                 # Extract to demo/
-./scripts/test-run.sh                   # Run tests (requires GODOT_APP)
+./scripts/validate-setup.sh                 # Extract to demo/
+./scripts/validate-run.sh                   # Run tests (requires GODOT_APP)
 
 # Build releases for all versions
 ./scripts/release-all.sh

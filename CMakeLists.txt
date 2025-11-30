@@ -147,6 +147,14 @@ set(INKCPP_TEST OFF CACHE BOOL "Disable tests" FORCE)
 # Add inkcpp subdirectory
 add_subdirectory(libs/inkcpp EXCLUDE_FROM_ALL)
 
+# Suppress warnings from inkcpp by treating as system headers
+set_target_properties(inkcpp PROPERTIES
+    INTERFACE_SYSTEM_INCLUDE_DIRECTORIES $<TARGET_PROPERTY:inkcpp,INTERFACE_INCLUDE_DIRECTORIES>
+)
+set_target_properties(inkcpp_compiler PROPERTIES
+    INTERFACE_SYSTEM_INCLUDE_DIRECTORIES $<TARGET_PROPERTY:inkcpp_compiler,INTERFACE_INCLUDE_DIRECTORIES>
+)
+
 # ==============================================================================
 # Build Godot-CPP Bindings
 # ==============================================================================
@@ -163,12 +171,15 @@ endif()
 
 # Enable exceptions for godot-cpp (required by inkcpp)
 # This must be set before adding the subdirectory
-if(GODOT_VERSION STREQUAL "4.4")
-    set(GODOTCPP_DISABLE_EXCEPTIONS OFF CACHE BOOL "Enable exceptions for inkcpp compatibility" FORCE)
-endif()
+set(GODOTCPP_DISABLE_EXCEPTIONS OFF CACHE BOOL "Enable exceptions for inkcpp compatibility" FORCE)
 
 # Add godot-cpp subdirectory
 add_subdirectory(${GODOT_CPP_DIR} EXCLUDE_FROM_ALL)
+
+# Suppress warnings from godot-cpp by treating as system headers
+set_target_properties(godot-cpp PROPERTIES
+    INTERFACE_SYSTEM_INCLUDE_DIRECTORIES $<TARGET_PROPERTY:godot-cpp,INTERFACE_INCLUDE_DIRECTORIES>
+)
 
 # ==============================================================================
 # Build Godot-Ink Extension
@@ -213,6 +224,10 @@ endif()
 # Include directories
 target_include_directories(${PROJECT_NAME} PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}/src
+)
+
+# Include third-party libraries as system headers (suppresses warnings)
+target_include_directories(${PROJECT_NAME} SYSTEM PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}/libs/inkcpp/inkcpp/include
     ${CMAKE_CURRENT_SOURCE_DIR}/libs/inkcpp/inkcpp_compiler/include
     ${CMAKE_CURRENT_SOURCE_DIR}/libs/inkcpp/shared/public

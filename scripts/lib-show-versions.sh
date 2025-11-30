@@ -4,33 +4,11 @@
 # Description: Show current versions of all dependency submodules
 # Usage: ./scripts/lib-show-versions.sh
 
-set -e  # Exit on error
-set -u  # Exit on undefined variable
+# Source common functions
+source "$(dirname "${BASH_SOURCE[0]}")/_common.sh"
 
-# Colors for output
-RED='\033[0;31m'
-GREEN='\033[0;32m'
-YELLOW='\033[1;33m'
-BLUE='\033[0;34m'
+# Additional color for this script
 CYAN='\033[0;36m'
-NC='\033[0m' # No Color
-
-# Helper functions
-log_info() {
-    echo -e "${BLUE}[INFO]${NC} $1"
-}
-
-log_success() {
-    echo -e "${GREEN}[SUCCESS]${NC} $1"
-}
-
-log_warn() {
-    echo -e "${YELLOW}[WARN]${NC} $1"
-}
-
-log_error() {
-    echo -e "${RED}[ERROR]${NC} $1" >&2
-}
 
 show_help() {
     cat << EOF
@@ -53,8 +31,8 @@ if [[ "${1:-}" == "-h" ]] || [[ "${1:-}" == "--help" ]]; then
     exit 0
 fi
 
-# Get project root (assuming script is in scripts/)
-PROJECT_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+# Get project root and change to it
+PROJECT_ROOT="$(get_project_root)"
 cd "$PROJECT_ROOT"
 
 echo ""

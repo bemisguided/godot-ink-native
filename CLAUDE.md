@@ -17,18 +17,16 @@ Quick reference guide for AI assistants working on godot-ink-native.
 ### Available Scripts (Always Permitted)
 
 **Build & Release:**
-- `./scripts/build-version.sh <version> [build_type] [--clean]` - Configure and build for specific Godot version (incremental by default)
-- `./scripts/release-version.sh <version>` - Build and create release package
-- `./scripts/release-all.sh` - Build and release for all supported versions
+- `./scripts/target-build.sh <version|all> [build_type] [--clean]` - Build for specific Godot version or all versions (incremental by default)
+- `./scripts/target-clean.sh [version|all]` - Clean build artifacts for specific version(s)
+- `./scripts/target-release.sh <version|all>` - Build and create release package(s)
 
-**Testing:**
-- `./scripts/test-run.sh` - Run demo project tests using Godot (requires GODOT_APP env var)
-- `./scripts/test-setup.sh [version]` - Extract release package into demo/addons/gd-ink-native
+**Validation:**
+- `./scripts/validate-run.sh` - Run demo project tests using Godot (requires GODOT_APP env var)
+- `./scripts/validate-setup.sh [version]` - Extract release package into demo/addons/gd-ink-native
 
 **Dependency Management:**
-- `./scripts/lib-update-godot.sh` - Update godot-cpp submodules to latest stable branches
-- `./scripts/lib-update-ink.sh` - Update inkcpp submodule to latest stable tag
-- `./scripts/lib-update-all.sh` - Update all dependency submodules
+- `./scripts/lib-update.sh [godot|ink|all]` - Update library submodules (default: all)
 - `./scripts/lib-show-versions.sh` - Display current versions of all submodules
 - `./scripts/lib-pin-ink.sh <tag>` - Pin inkcpp to a specific tag version
 
@@ -42,20 +40,26 @@ Quick reference guide for AI assistants working on godot-ink-native.
 
 **Quick build and test:**
 ```bash
-./scripts/build-version.sh 4.4
-./scripts/test-setup.sh 4.4
-./scripts/test-run.sh
+./scripts/target-build.sh 4.4
+./scripts/validate-setup.sh 4.4
+./scripts/validate-run.sh
 ```
 
 **Create release:**
 ```bash
-./scripts/release-version.sh 4.4
+./scripts/target-release.sh 4.4
 # Output: release/godot-ink-0.1.0-godot4.4-macos.zip
+```
+
+**Build all versions:**
+```bash
+./scripts/target-build.sh all
+./scripts/target-release.sh all
 ```
 
 **Update dependencies (requires git permission):**
 ```bash
-./scripts/lib-update-all.sh
+./scripts/lib-update.sh
 # Then commit changes
 ```
 
@@ -367,17 +371,17 @@ String: {concat("Hello", " World")}
 **Recommended workflow (uses permitted scripts):**
 ```bash
 # Build for Godot 4.4 (incremental)
-./scripts/build-version.sh 4.4
+./scripts/target-build.sh 4.4
 
 # Build with clean (after dependency updates)
-./scripts/build-version.sh 4.4 --clean
+./scripts/target-build.sh 4.4 --clean
 
 # Create release package
-./scripts/release-version.sh 4.4
+./scripts/target-release.sh 4.4
 
 # Install to demo and test
-./scripts/test-setup.sh 4.4
-./scripts/test-run.sh
+./scripts/validate-setup.sh 4.4
+./scripts/validate-run.sh
 ```
 
 ### Manual CMake Commands (Advanced/Debugging Only)
@@ -420,16 +424,16 @@ godot --path demo
 **Switching Godot versions (use scripts):**
 ```bash
 # Build for 4.4 (uses build/4.4/ directory)
-./scripts/build-version.sh 4.4
+./scripts/target-build.sh 4.4
 
 # Build for 4.5 (uses build/4.5/ directory)
-./scripts/build-version.sh 4.5
+./scripts/target-build.sh 4.5
 
 # Switch back to 4.4 - FAST! (seconds, not minutes)
-./scripts/build-version.sh 4.4
+./scripts/target-build.sh 4.4
 
 # Force clean rebuild if needed
-./scripts/build-version.sh 4.4 --clean
+./scripts/target-build.sh 4.4 --clean
 ```
 
 **Performance:**
@@ -727,38 +731,38 @@ int InkExample::get_data() const {
 
 ```bash
 # Incremental build (fast)
-./scripts/build-version.sh 4.4
-./scripts/release-version.sh 4.4
-./scripts/test-setup.sh 4.4
-./scripts/test-run.sh
+./scripts/target-build.sh 4.4
+./scripts/target-release.sh 4.4
+./scripts/validate-setup.sh 4.4
+./scripts/validate-run.sh
 
 # Clean build (after dependency updates)
-./scripts/build-version.sh 4.4 --clean
-./scripts/release-version.sh 4.4
+./scripts/target-build.sh 4.4 --clean
+./scripts/target-release.sh 4.4
 ```
 
 ### Switch Godot Version (⚠️ USE SCRIPTS - See Section 2)
 
 ```bash
 # Version-specific directories - no cleaning needed
-./scripts/build-version.sh 4.4  # Build for 4.4 (uses build/4.4/)
-./scripts/build-version.sh 4.5  # Build for 4.5 (uses build/4.5/)
-./scripts/build-version.sh 4.4  # Switch back - FAST! (seconds)
+./scripts/target-build.sh 4.4  # Build for 4.4 (uses build/4.4/)
+./scripts/target-build.sh 4.5  # Build for 4.5 (uses build/4.5/)
+./scripts/target-build.sh 4.4  # Switch back - FAST! (seconds)
 ```
 
 ### Quick Test (⚠️ USE SCRIPTS - See Section 2)
 
 ```bash
 # Recommended workflow
-./scripts/test-setup.sh 4.4
-./scripts/test-run.sh
+./scripts/validate-setup.sh 4.4
+./scripts/validate-run.sh
 ```
 
 ### Debug Build (⚠️ USE SCRIPTS - See Section 2)
 
 ```bash
 # Debug build with scripts
-./scripts/build-version.sh 4.4 Debug
+./scripts/target-build.sh 4.4 Debug
 
 # Scripts support both Release and Debug
 ```
@@ -780,18 +784,18 @@ int InkExample::get_data() const {
 - `lib-update-all.sh` - Update all dependency submodules (warns to use --clean)
 
 **Testing:**
-- `test-run.sh` - Run demo project tests using Godot
-- `test-setup.sh [version]` - Extract release package into demo/addons/ink
+- `validate-run.sh` - Run demo project tests using Godot
+- `validate-setup.sh [version]` - Extract release package into demo/addons/ink
 
 ### Common Script Workflows
 
 **Quick build and test:**
 ```bash
 # Build, package, and test for Godot 4.4
-./scripts/build-version.sh 4.4
-./scripts/release-version.sh 4.4
-./scripts/test-setup.sh 4.4
-./scripts/test-run.sh
+./scripts/target-build.sh 4.4
+./scripts/target-release.sh 4.4
+./scripts/validate-setup.sh 4.4
+./scripts/validate-run.sh
 ```
 
 **Release all versions:**
@@ -816,11 +820,11 @@ git commit -m "Update dependency submodules"
 
 ### Environment Variables
 
-**GODOT_APP** - Path to Godot executable (required for `test-run.sh`):
+**GODOT_APP** - Path to Godot executable (required for `validate-run.sh`):
 ```bash
 # Set for current session
 export GODOT_APP=/Applications/Godot.app/Contents/MacOS/Godot
-./scripts/test-run.sh
+./scripts/validate-run.sh
 
 # Or set permanently in ~/.bashrc or ~/.zshrc
 echo 'export GODOT_APP=/path/to/godot' >> ~/.bashrc

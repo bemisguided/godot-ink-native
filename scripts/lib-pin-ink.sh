@@ -4,32 +4,8 @@
 # Description: Pin inkcpp submodule to a specific tag version
 # Usage: ./scripts/lib-pin-ink.sh <tag>
 
-set -e  # Exit on error
-set -u  # Exit on undefined variable
-
-# Colors for output
-RED='\033[0;31m'
-GREEN='\033[0;32m'
-YELLOW='\033[1;33m'
-BLUE='\033[0;34m'
-NC='\033[0m' # No Color
-
-# Helper functions
-log_info() {
-    echo -e "${BLUE}[INFO]${NC} $1"
-}
-
-log_success() {
-    echo -e "${GREEN}[SUCCESS]${NC} $1"
-}
-
-log_warn() {
-    echo -e "${YELLOW}[WARN]${NC} $1"
-}
-
-log_error() {
-    echo -e "${RED}[ERROR]${NC} $1" >&2
-}
+# Source common functions
+source "$(dirname "${BASH_SOURCE[0]}")/_common.sh"
 
 show_help() {
     cat << EOF
@@ -68,8 +44,8 @@ fi
 
 TAG="$1"
 
-# Get project root (assuming script is in scripts/)
-PROJECT_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+# Get project root and change to it
+PROJECT_ROOT="$(get_project_root)"
 cd "$PROJECT_ROOT"
 
 SUBMODULE_PATH="libs/inkcpp"

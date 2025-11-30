@@ -1,35 +1,11 @@
 #!/usr/bin/env bash
 
-# Script: setup-demo.sh
+# Script: validate-setup.sh
 # Description: Extract latest release package into demo/addons/gd-ink-native
-# Usage: ./scripts/setup-demo.sh [godot_version]
+# Usage: ./scripts/validate-setup.sh [godot_version]
 
-set -e  # Exit on error
-set -u  # Exit on undefined variable
-
-# Colors for output
-RED='\033[0;31m'
-GREEN='\033[0;32m'
-YELLOW='\033[1;33m'
-BLUE='\033[0;34m'
-NC='\033[0m' # No Color
-
-# Helper functions
-log_info() {
-    echo -e "${BLUE}[INFO]${NC} $1"
-}
-
-log_success() {
-    echo -e "${GREEN}[SUCCESS]${NC} $1"
-}
-
-log_warn() {
-    echo -e "${YELLOW}[WARN]${NC} $1"
-}
-
-log_error() {
-    echo -e "${RED}[ERROR]${NC} $1" >&2
-}
+# Source common functions
+source "$(dirname "${BASH_SOURCE[0]}")/_common.sh"
 
 show_help() {
     cat << EOF
@@ -57,8 +33,8 @@ if [[ "${1:-}" == "-h" ]] || [[ "${1:-}" == "--help" ]]; then
     exit 0
 fi
 
-# Get project root (assuming script is in scripts/)
-PROJECT_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+# Get project root and change to it
+PROJECT_ROOT="$(get_project_root)"
 cd "$PROJECT_ROOT"
 
 GODOT_VERSION="${1:-}"
@@ -66,7 +42,7 @@ GODOT_VERSION="${1:-}"
 # Check if release directory exists
 if [ ! -d "release" ]; then
     log_error "Release directory not found: release/"
-    log_error "Build a release first with: scripts/release-version.sh"
+    log_error "Build a release first with: scripts/target-release.sh"
     exit 1
 fi
 
@@ -83,7 +59,7 @@ if [ -n "$GODOT_VERSION" ]; then
 
     if [ -z "$PACKAGE" ]; then
         log_error "No release package found for Godot $GODOT_VERSION"
-        log_error "Build one first with: scripts/release-version.sh $GODOT_VERSION"
+        log_error "Build one first with: scripts/target-release.sh $GODOT_VERSION"
         exit 1
     fi
 else
@@ -96,7 +72,7 @@ else
 
     if [ -z "$PACKAGE" ]; then
         log_error "No release packages found in release/"
-        log_error "Build one first with: scripts/release-version.sh 4.4"
+        log_error "Build one first with: scripts/target-release.sh 4.4"
         exit 1
     fi
 fi

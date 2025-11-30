@@ -15,170 +15,111 @@ This directory contains convenience scripts for common development tasks. These 
 
 | Script                 | Description                                              |
 | ---------------------- | -------------------------------------------------------- |
-| `build-version.sh`     | Clean, configure, and build for a specific Godot version |
-| `release-version.sh`   | Build and create release package for a specific version  |
-| `release-all.sh`       | Build and release for all supported Godot versions       |
-| `lib-update-godot.sh`  | Update godot-cpp submodules to latest stable branches    |
-| `lib-update-ink.sh`    | Update inkcpp submodule to latest stable tag release     |
-| `lib-update-all.sh`    | Update all dependency submodules                         |
+| `target-build.sh`      | Build for a specific Godot version or all versions       |
+| `target-clean.sh`      | Clean build artifacts for specific version(s)            |
+| `target-release.sh`    | Build and create release package(s)                      |
+| `lib-update.sh`        | Update library submodules (godot-cpp, inkcpp, or all)    |
 | `lib-show-versions.sh` | Display current versions of all dependency submodules    |
 | `lib-pin-ink.sh`       | Pin inkcpp submodule to a specific tag version           |
-| `test-run.sh`          | Run demo project tests using Godot                       |
-| `test-setup.sh`        | Extract release package into demo/addons/gd-ink-native   |
+| `validate-setup.sh`        | Extract release package into demo/addons/gd-ink-native   |
+| `validate-run.sh`          | Run demo project tests using Godot                       |
 
-## Detailed Usage
+## Target Scripts (Version Operations)
 
-### `build-version.sh`
+### `target-build.sh`
 
-Clean, configure, and build the extension for a specific Godot version.
+Build the extension for a specific Godot version or all versions.
 
 ```bash
 # Syntax
-./scripts/build-version.sh <version> [build_type]
+./scripts/target-build.sh <4.4|4.5|all> [build_type] [--clean]
 
 # Examples
-./scripts/build-version.sh 4.4           # Build Godot 4.4 (Release)
-./scripts/build-version.sh 4.4 Debug    # Build Godot 4.4 (Debug)
-./scripts/build-version.sh 4.4 Release  # Build Godot 4.4 (Release)
+./scripts/target-build.sh 4.4                  # Build Godot 4.4 (incremental)
+./scripts/target-build.sh 4.5 Debug            # Build Godot 4.5 (Debug)
+./scripts/target-build.sh 4.4 --clean          # Clean build for 4.4
+./scripts/target-build.sh all                  # Build all versions
+./scripts/target-build.sh all --clean          # Clean build all versions
 ```
 
 **Arguments:**
-- `version` - Godot version to build for (4.4 or 4.5)
+- `version` - Godot version to build (4.4, 4.5, or all)
 - `build_type` - Build type (Release or Debug, default: Release)
+- `--clean` - Clean build directory before building
 
-**What it does:**
-1. Validates input parameters
-2. Removes existing `build/` directory
-3. Runs CMake configure with specified options
-4. Builds the extension with 4 parallel jobs
-5. Reports binary location and size
+**Features:**
+- Version-specific build directories (build/4.4/, build/4.5/)
+- Fast incremental builds (~2-4 seconds if no changes)
+- Parallel compilation (4 jobs)
+- "all" support builds all versions sequentially
 
-**Output:**
-- Binary: `build/libgodot_ink.<VERSION>.<PLATFORM>.template_<BUILD_TYPE>.*`
+### `target-clean.sh`
 
-### `release-version.sh`
-
-Build and create a release package for a specific Godot version.
+Clean build artifacts for specific Godot version(s).
 
 ```bash
 # Syntax
-./scripts/release-version.sh <version>
+./scripts/target-clean.sh [4.4|4.5|all]
 
 # Examples
-./scripts/release-version.sh 4.4  # Create release for Godot 4.4
-./scripts/release-version.sh 4.4  # Create release for Godot 4.4
+./scripts/target-clean.sh           # Show available artifacts
+./scripts/target-clean.sh 4.4       # Clean 4.4 build artifacts
+./scripts/target-clean.sh all       # Clean all build artifacts
 ```
 
 **Arguments:**
-- `version` - Godot version to release for (4.4 or 4.5)
+- `version` - Version to clean (4.4, 4.5, or all, default: show status)
 
-**What it does:**
-1. Calls `build-version.sh` with Release build type
-2. Runs CMake `release` target to create distribution package
-3. Reports package location, size, and contents
+### `target-release.sh`
+
+Build and create release package for specific version(s).
+
+```bash
+# Syntax
+./scripts/target-release.sh <4.4|4.5|all>
+
+# Examples
+./scripts/target-release.sh 4.4     # Create release for Godot 4.4
+./scripts/target-release.sh all     # Create releases for all versions
+```
+
+**Arguments:**
+- `version` - Godot version to release (4.4, 4.5, or all)
 
 **Output:**
 - Package: `release/godot-ink-<VERSION>-godot<GODOT_VERSION>-<PLATFORM>.zip`
 
-### `release-all.sh`
+## Library Scripts (Dependency Management)
 
-Build and create release packages for all supported Godot versions.
+### `lib-update.sh`
 
-```bash
-# Syntax
-./scripts/release-all.sh
-
-# Example
-./scripts/release-all.sh  # Build releases for 4.4 and 4.4
-```
-
-**What it does:**
-1. Iterates through all supported Godot versions (4.4, 4.5)
-2. Calls `release-version.sh` for each version
-3. Tracks success/failure for each version
-4. Reports summary with all created packages
-
-**Output:**
-- Packages: Multiple zip files in `release/` directory
-- Summary of successful and failed builds
-
-### `lib-update-godot.sh`
-
-Update godot-cpp submodules to their latest stable branch versions.
+Update library submodules to latest stable versions.
 
 ```bash
 # Syntax
-./scripts/lib-update-godot.sh
+./scripts/lib-update.sh [godot|ink|all]
 
-# Example
-./scripts/lib-update-godot.sh  # Update both godot-cpp-4.4 and godot-cpp-4.5
+# Examples
+./scripts/lib-update.sh             # Update all (default)
+./scripts/lib-update.sh godot       # Update godot-cpp only
+./scripts/lib-update.sh ink         # Update inkcpp only
 ```
+
+**Arguments:**
+- `target` - Libraries to update (godot, ink, or all, default: all)
 
 **What it does:**
-1. Updates `libs/godot/godot-cpp-4.4` to latest 4.4 branch
-2. Updates `libs/godot/godot-cpp-4.4` to latest 4.4 branch
-3. Reports old and new commit hashes for each
-4. Indicates if already up to date
+- `godot` - Updates godot-cpp-4.4 and godot-cpp-4.5 to latest branch commits
+- `ink` - Updates inkcpp to latest stable tag (v0.1.x)
+- `all` - Updates everything + runs `git submodule update --init --recursive`
 
-**Note:** This only updates the submodule checkout. You need to commit the submodule changes if you want to record them:
-
-```bash
-./scripts/lib-update-godot.sh
-git add libs/godot/
-git commit -m "Update godot-cpp submodules"
-```
-
-### `lib-update-ink.sh`
-
-Update inkcpp submodule to the latest stable tag release.
+**Note:** Remember to commit submodule changes and rebuild with `--clean`:
 
 ```bash
-# Syntax
-./scripts/lib-update-ink.sh
-
-# Example
-./scripts/lib-update-ink.sh  # Update inkcpp to latest tag
-```
-
-**What it does:**
-1. Fetches all tags from remote
-2. Finds latest semantic version tag (v0.1.x, v0.2.x, etc.)
-3. Checks out the latest tag
-4. Reports old and new tag versions
-5. Indicates if already on latest tag
-
-**Note:** This uses tag-based versioning for stable releases. Same as godot updates, you need to commit the changes:
-
-```bash
-./scripts/lib-update-ink.sh
-git add libs/inkcpp
-git commit -m "Update inkcpp to v0.1.10"
-```
-
-### `lib-update-all.sh`
-
-Update all dependency submodules (godot-cpp and inkcpp).
-
-```bash
-# Syntax
-./scripts/lib-update-all.sh
-
-# Example
-./scripts/lib-update-all.sh  # Update all submodules
-```
-
-**What it does:**
-1. Calls `lib-update-godot.sh` to update godot-cpp
-2. Calls `lib-update-ink.sh` to update inkcpp
-3. Runs `git submodule update --init --recursive` to ensure consistency
-4. Reports summary of all updates
-
-**Note:** Remember to commit all submodule changes:
-
-```bash
-./scripts/lib-update-all.sh
+./scripts/lib-update.sh
 git add libs/
-git commit -m "Update all dependency submodules"
+git commit -m "Update dependency submodules"
+./scripts/target-build.sh all --clean
 ```
 
 ### `lib-show-versions.sh`
@@ -186,17 +127,8 @@ git commit -m "Update all dependency submodules"
 Display current pinned versions of all dependency submodules.
 
 ```bash
-# Syntax
 ./scripts/lib-show-versions.sh
-
-# Example
-./scripts/lib-show-versions.sh  # Show all dependency versions
 ```
-
-**What it does:**
-1. Shows current commit/branch for godot-cpp-4.4 and godot-cpp-4.5
-2. Shows current tag for inkcpp (or warns if not on a tag)
-3. Uses color-coded output for easy reading
 
 **Example output:**
 ```
@@ -221,97 +153,51 @@ Pin inkcpp submodule to a specific tag version.
 ./scripts/lib-pin-ink.sh <tag>
 
 # Examples
-./scripts/lib-pin-ink.sh v0.1.9   # Pin to v0.1.9
-./scripts/lib-pin-ink.sh v0.1.8   # Rollback to v0.1.8
+./scripts/lib-pin-ink.sh v0.1.9     # Pin to v0.1.9
+./scripts/lib-pin-ink.sh v0.1.8     # Rollback to v0.1.8
 ```
-
-**Arguments:**
-- `tag` - Version tag to pin to (e.g., v0.1.9, v0.1.8)
-
-**What it does:**
-1. Fetches all tags from remote
-2. Validates the specified tag exists
-3. Checks out the specified tag
-4. Reports old and new versions
-5. Reminds you to commit the change
 
 **Use cases:**
 - Pin to a specific stable version for testing
 - Rollback to an older version if needed
-- Override automatic update from `lib-update-ink.sh`
+- Override automatic update from `lib-update.sh`
 
-**Note:** Remember to commit the submodule change:
+## Validation Scripts
+
+### `validate-setup.sh`
+
+Extract release package into `demo/addons/gd-ink-native` for testing.
 
 ```bash
-./scripts/lib-pin-ink.sh v0.1.8
-git add libs/inkcpp
-git commit -m "Pin inkcpp to v0.1.8"
+# Syntax
+./scripts/validate-setup.sh [version]
+
+# Examples
+./scripts/validate-setup.sh             # Extract latest available
+./scripts/validate-setup.sh 4.4         # Extract Godot 4.4 release
 ```
 
-### `test-run.sh`
+**Prerequisites:**
+- Release package must exist (run `target-release.sh` first)
+
+### `validate-run.sh`
 
 Run the demo project tests using Godot.
 
 ```bash
 # Syntax
-./scripts/test.sh
+./scripts/validate-run.sh
 
 # Examples
-./scripts/test.sh                           # Use 'godot' from PATH
-GODOT_APP=/path/to/godot ./scripts/test.sh  # Use specific Godot executable
+./scripts/validate-run.sh                              # Use 'godot' from PATH
+GODOT_APP=/path/to/godot ./scripts/validate-run.sh     # Use specific executable
 ```
 
 **Environment Variables:**
 - `GODOT_APP` - Path to Godot executable (default: `godot`)
 
-**What it does:**
-1. Checks if Godot executable is available
-2. Verifies demo directory and project file exist
-3. Warns if addon is not installed in demo
-4. Runs Godot in headless mode with test script
-5. Reports test results
-
 **Prerequisites:**
-- Demo addon must be installed (run `setup-demo.sh` first)
-- Demo must have tests in `demo/tests/test_basic.tscn`
-
-**Setting GODOT_APP:**
-
-```bash
-# Temporary (current session)
-export GODOT_APP=/Applications/Godot.app/Contents/MacOS/Godot
-./scripts/test.sh
-
-# Permanent (add to ~/.bashrc or ~/.zshrc)
-echo 'export GODOT_APP=/path/to/godot' >> ~/.bashrc
-```
-
-### `setup-demo.sh`
-
-Extract the latest release package into `demo/addons/gd-ink-native` for testing.
-
-```bash
-# Syntax
-./scripts/setup-demo.sh [godot_version]
-
-# Examples
-./scripts/setup-demo.sh      # Extract latest available release
-./scripts/setup-demo.sh 4.4  # Extract Godot 4.4 release
-./scripts/setup-demo.sh 4.4  # Extract Godot 4.4 release
-```
-
-**Arguments:**
-- `godot_version` - Godot version to extract (4.4 or 4.5, default: auto-detect)
-
-**What it does:**
-1. Finds release package in `release/` directory
-2. Removes existing `demo/addons/gd-ink-native` if present
-3. Extracts package to `demo/addons/gd-ink-native`
-4. Verifies extraction was successful
-5. Lists extracted files
-
-**Prerequisites:**
-- Release package must exist (run `release-version.sh` first)
+- Demo addon must be installed (run `validate-setup.sh` first)
 
 ## Common Workflows
 
@@ -330,63 +216,83 @@ export GODOT_APP=/path/to/godot
 
 ```bash
 # 1. Build for your target Godot version
-./scripts/build-version.sh 4.4
+./scripts/target-build.sh 4.4
 
 # 2. Create release package
-./scripts/release-version.sh 4.4
+./scripts/target-release.sh 4.4
 
 # 3. Install to demo for testing
-./scripts/setup-demo.sh 4.4
+./scripts/validate-setup.sh 4.4
 
 # 4. Run tests
-./scripts/test.sh
+./scripts/validate-run.sh
 ```
 
-### Release Workflow
+### Multi-Version Release Workflow
 
 ```bash
 # Build and package for all supported Godot versions
-./scripts/release-all.sh
+./scripts/target-release.sh all
 
 # Output will be in release/ directory:
 # - godot-ink-0.1.0-godot4.4-macos.zip
-# - godot-ink-0.1.0-godot4.4-macos.zip
+# - godot-ink-0.1.0-godot4.5-macos.zip
 ```
 
 ### Update Dependencies
 
 ```bash
 # Update all submodules to latest
-./scripts/lib-update-all.sh
+./scripts/lib-update.sh
 
 # Or update individually
-./scripts/lib-update-godot.sh  # Just godot-cpp
-./scripts/lib-update-ink.sh    # Just inkcpp
+./scripts/lib-update.sh godot  # Just godot-cpp
+./scripts/lib-update.sh ink    # Just inkcpp
 
-# Commit the updates
+# Commit the updates and rebuild
 git add libs/
 git commit -m "Update dependency submodules"
+./scripts/target-build.sh all --clean
 ```
 
-### Testing Changes
+### Quick Rebuild and Test Cycle
 
 ```bash
-# Quick rebuild and test cycle
-./scripts/build-version.sh 4.4 Debug  # Faster Debug build
-./scripts/release-version.sh 4.4      # Package it
-./scripts/setup-demo.sh 4.4           # Install to demo
-./scripts/test.sh                     # Run tests
+# Make code changes, then:
+./scripts/target-build.sh 4.4         # Incremental build (fast!)
+./scripts/target-release.sh 4.4       # Package it
+./scripts/validate-setup.sh 4.4           # Install to demo
+./scripts/validate-run.sh                 # Run tests
 ```
 
 ## Script Features
 
 All scripts include:
 
+- **Consistent interface**: "all" parameter works across target-* scripts
 - **Help text**: Run with `-h` or `--help` flag
 - **Color output**: Blue for info, green for success, yellow for warnings, red for errors
 - **Error handling**: Exit immediately on error (`set -e`)
 - **Input validation**: Verify all arguments before proceeding
-- **Verbose output**: Clear progress messages for each step
+- **Shared boilerplate**: Common functions in `_common.sh`
+
+## Interface Pattern
+
+```bash
+# Target operations (version-specific)
+target-build.sh <4.4|4.5|all> [options]
+target-clean.sh [4.4|4.5|all]
+target-release.sh <4.4|4.5|all>
+
+# Library operations (component-specific)
+lib-update.sh [godot|ink|all]     # Default: all
+lib-pin-ink.sh <tag>
+lib-show-versions.sh
+
+# Test operations
+validate-setup.sh [version]            # Auto-detect if omitted
+validate-run.sh
+```
 
 ## Troubleshooting
 
@@ -411,7 +317,7 @@ git submodule update --init --recursive
 Build a release first:
 
 ```bash
-./scripts/release-version.sh 4.4
+./scripts/target-release.sh 4.4
 ```
 
 ### Permission Denied
@@ -420,6 +326,14 @@ Make scripts executable:
 
 ```bash
 chmod +x scripts/*.sh
+```
+
+### After Updating Dependencies
+
+Always rebuild with `--clean` flag:
+
+```bash
+./scripts/target-build.sh all --clean
 ```
 
 ## See Also
