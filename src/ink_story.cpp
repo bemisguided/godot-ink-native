@@ -36,47 +36,66 @@ InkStory::~InkStory() {
 }
 
 void InkStory::_bind_methods() {
-	// Loading methods
+	// ===== Action Methods (operations with side effects) =====
+
+	// Loading
 	ClassDB::bind_method(D_METHOD("load_story", "story_path"), &InkStory::load_story);
 	ClassDB::bind_method(D_METHOD("reset_state"), &InkStory::reset_state);
 
-	// Execution methods
+	// Execution
 	ClassDB::bind_method(D_METHOD("continue_story"), &InkStory::continue_story);
 	ClassDB::bind_method(D_METHOD("continue_story_maximally"), &InkStory::continue_story_maximally);
-	ClassDB::bind_method(D_METHOD("can_continue"), &InkStory::can_continue);
-	ClassDB::bind_method(D_METHOD("get_current_text"), &InkStory::get_current_text);
 
-	// Choice methods
-	ClassDB::bind_method(D_METHOD("get_current_choices"), &InkStory::get_current_choices);
-	ClassDB::bind_method(D_METHOD("get_current_choice_count"), &InkStory::get_current_choice_count);
+	// Choices
 	ClassDB::bind_method(D_METHOD("choose_choice_index", "index"), &InkStory::choose_choice_index);
 	ClassDB::bind_method(D_METHOD("choose_path_string", "path"), &InkStory::choose_path_string);
+	ClassDB::bind_method(D_METHOD("has_choices"), &InkStory::has_choices);
 
-	// Tag methods
-	ClassDB::bind_method(D_METHOD("get_current_tags"), &InkStory::get_current_tags);
-	ClassDB::bind_method(D_METHOD("get_global_tags"), &InkStory::get_global_tags);
-	ClassDB::bind_method(D_METHOD("get_knot_tags"), &InkStory::get_knot_tags);
+	// Tags
+	ClassDB::bind_method(D_METHOD("has_tags"), &InkStory::has_tags);
 
-	// Variable methods
+	// Variables
 	ClassDB::bind_method(D_METHOD("get_variable", "name"), &InkStory::get_variable);
 	ClassDB::bind_method(D_METHOD("set_variable", "name", "value"), &InkStory::set_variable);
 
-	// External function methods
+	// External Functions
 	ClassDB::bind_method(D_METHOD("bind_external_function", "name", "function", "lookahead_safe"), &InkStory::bind_external_function, DEFVAL(true));
 	ClassDB::bind_method(D_METHOD("unbind_external_function", "name"), &InkStory::unbind_external_function);
 	ClassDB::bind_method(D_METHOD("has_external_function", "name"), &InkStory::has_external_function);
 
-	// Path methods
-	ClassDB::bind_method(D_METHOD("get_current_path"), &InkStory::get_current_path);
+	// ===== Property Getters (must bind before ADD_PROPERTY) =====
 
-	// Resource property methods
+	// Story path getter/setter
 	ClassDB::bind_method(D_METHOD("set_story_path", "path"), &InkStory::set_story_path);
 	ClassDB::bind_method(D_METHOD("get_story_path"), &InkStory::get_story_path);
+
+	// State getters
+	ClassDB::bind_method(D_METHOD("is_loaded"), &InkStory::is_loaded);
+	ClassDB::bind_method(D_METHOD("can_continue"), &InkStory::can_continue);
+	ClassDB::bind_method(D_METHOD("get_current_text"), &InkStory::get_current_text);
+	ClassDB::bind_method(D_METHOD("get_current_choices"), &InkStory::get_current_choices);
+	ClassDB::bind_method(D_METHOD("get_current_choice_count"), &InkStory::get_current_choice_count);
+	ClassDB::bind_method(D_METHOD("get_tags"), &InkStory::get_tags);
+	ClassDB::bind_method(D_METHOD("get_global_tags"), &InkStory::get_global_tags);
+	ClassDB::bind_method(D_METHOD("get_knot_tags"), &InkStory::get_knot_tags);
+	ClassDB::bind_method(D_METHOD("get_current_path"), &InkStory::get_current_path);
+
+	// ===== Properties =====
+
+	// Story path (read/write property with load side effect)
 	ADD_PROPERTY(PropertyInfo(Variant::STRING, "story_path", PROPERTY_HINT_FILE, "*.inkb,*.inkj,*.json"),
 	             "set_story_path", "get_story_path");
 
-	// Utility methods
-	ClassDB::bind_method(D_METHOD("is_loaded"), &InkStory::is_loaded);
+	// State properties (read-only)
+	ADD_PROPERTY(PropertyInfo(Variant::BOOL, "loaded"), "", "is_loaded");
+	ADD_PROPERTY(PropertyInfo(Variant::BOOL, "can_continue"), "", "can_continue");
+	ADD_PROPERTY(PropertyInfo(Variant::STRING, "current_text"), "", "get_current_text");
+	ADD_PROPERTY(PropertyInfo(Variant::ARRAY, "current_choices"), "", "get_current_choices");
+	ADD_PROPERTY(PropertyInfo(Variant::INT, "choice_count"), "", "get_current_choice_count");
+	ADD_PROPERTY(PropertyInfo(Variant::PACKED_STRING_ARRAY, "tags"), "", "get_tags");
+	ADD_PROPERTY(PropertyInfo(Variant::PACKED_STRING_ARRAY, "global_tags"), "", "get_global_tags");
+	ADD_PROPERTY(PropertyInfo(Variant::PACKED_STRING_ARRAY, "knot_tags"), "", "get_knot_tags");
+	ADD_PROPERTY(PropertyInfo(Variant::STRING, "current_path"), "", "get_current_path");
 }
 
 void InkStory::_update_choices() {
@@ -334,6 +353,10 @@ int InkStory::get_current_choice_count() const {
 	return _current_choices.size();
 }
 
+bool InkStory::has_choices() const {
+	return get_current_choice_count() > 0;
+}
+
 void InkStory::choose_choice_index(int index) {
 	if (!_runner) {
 		ERR_PRINT("Cannot choose: story not loaded");
@@ -378,7 +401,7 @@ bool InkStory::choose_path_string(const String& path) {
 	return success;
 }
 
-PackedStringArray InkStory::get_current_tags() const {
+PackedStringArray InkStory::get_tags() const {
 	PackedStringArray tags;
 
 	if (!_runner) {
@@ -394,6 +417,10 @@ PackedStringArray InkStory::get_current_tags() const {
 	}
 
 	return tags;
+}
+
+bool InkStory::has_tags() const {
+	return _runner && _runner->num_tags() > 0;
 }
 
 PackedStringArray InkStory::get_global_tags() const {

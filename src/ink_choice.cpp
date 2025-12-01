@@ -17,13 +17,15 @@ InkChoice::~InkChoice() {
 }
 
 void InkChoice::_bind_methods() {
-	// Bind getter methods
+	// Bind has_tags() method (query operation)
+	ClassDB::bind_method(D_METHOD("has_tags"), &InkChoice::has_tags);
+
+	// Bind getters (required for properties)
 	ClassDB::bind_method(D_METHOD("get_index"), &InkChoice::get_index);
 	ClassDB::bind_method(D_METHOD("get_text"), &InkChoice::get_text);
 	ClassDB::bind_method(D_METHOD("get_tags"), &InkChoice::get_tags);
-	ClassDB::bind_method(D_METHOD("has_tags"), &InkChoice::has_tags);
 
-	// Add properties for easier GDScript access
+	// Expose properties (read-only data access)
 	ADD_PROPERTY(PropertyInfo(Variant::INT, "index"), "", "get_index");
 	ADD_PROPERTY(PropertyInfo(Variant::STRING, "text"), "", "get_text");
 	ADD_PROPERTY(PropertyInfo(Variant::PACKED_STRING_ARRAY, "tags"), "", "get_tags");

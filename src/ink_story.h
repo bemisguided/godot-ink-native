@@ -163,8 +163,14 @@ public:
 	int get_current_choice_count() const;
 
 	/**
+	 * @brief Check if choices are available
+	 * @return true if at least one choice is available
+	 */
+	bool has_choices() const;
+
+	/**
 	 * @brief Select a choice by index
-	 * @param index The choice index (from InkChoice.get_index())
+	 * @param index The choice index (from InkChoice.index)
 	 */
 	void choose_choice_index(int index);
 
@@ -181,7 +187,13 @@ public:
 	 * @brief Get tags for the current line
 	 * @return Array of tag strings
 	 */
-	PackedStringArray get_current_tags() const;
+	PackedStringArray get_tags() const;
+
+	/**
+	 * @brief Check if the current line has tags
+	 * @return true if tags exist
+	 */
+	bool has_tags() const;
 
 	/**
 	 * @brief Get global tags (from top of story)

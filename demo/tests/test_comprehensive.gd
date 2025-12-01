@@ -152,7 +152,7 @@ func test_loading_and_compilation():
 	var story1 = InkStory.new()
 	var loaded = story1.load_story("res://examples/test_story.ink.json")
 	assert_true(loaded, "Loads .ink.json file successfully")
-	assert_true(story1.is_loaded(), "Story marked as loaded")
+	assert_true(story1.loaded, "Story marked as loaded")
 
 	# Test 2: Verify .ink.inkb file was created
 	var file_path = "res://examples/test_story.ink.inkb"
@@ -162,7 +162,7 @@ func test_loading_and_compilation():
 	var story2 = InkStory.new()
 	loaded = story2.load_story("res://examples/test_story.ink.inkb")
 	assert_true(loaded, "Loads .ink.inkb file directly")
-	assert_true(story2.is_loaded(), "Binary story marked as loaded")
+	assert_true(story2.loaded, "Binary story marked as loaded")
 
 	# Test 4: Verify content matches
 	var text1 = story1.continue_story()
@@ -176,77 +176,77 @@ func test_loading_and_compilation():
 func test_resource_properties():
 	start_test("Resource Properties")
 
-	# Test 1: set_story_path() loads story automatically
+	# Test 1: story_path property loads story automatically
 	var story1 = InkStory.new()
-	story1.set_story_path("res://examples/test_story.ink.json")
-	assert_true(story1.is_loaded(), "set_story_path() loads story automatically")
+	story1.story_path = "res://examples/test_story.ink.json"
+	assert_true(story1.loaded, "story_path property loads story automatically")
 
-	# Test 2: get_story_path() returns set path
-	var path1 = story1.get_story_path()
-	assert_equals(path1, "res://examples/test_story.ink.json", "get_story_path() returns correct path")
+	# Test 2: story_path property returns set path
+	var path1 = story1.story_path
+	assert_equals(path1, "res://examples/test_story.ink.json", "story_path property returns correct path")
 
-	# Test 3: Story is functional after set_story_path()
+	# Test 3: Story is functional after setting story_path
 	var text = story1.continue_story()
-	assert_not_null(text, "Story functional after set_story_path()")
-	assert_contains(text, "Welcome", "Content loaded correctly via set_story_path()")
+	assert_not_null(text, "Story functional after story_path set")
+	assert_contains(text, "Welcome", "Content loaded correctly via story_path property")
 
-	# Test 4: set_story_path() with .inkb file
+	# Test 4: story_path with .inkb file
 	var story2 = InkStory.new()
-	story2.set_story_path("res://examples/test_story.ink.inkb")
-	assert_true(story2.is_loaded(), "set_story_path() works with .inkb files")
-	var path2 = story2.get_story_path()
-	assert_equals(path2, "res://examples/test_story.ink.inkb", "get_story_path() returns .inkb path")
+	story2.story_path = "res://examples/test_story.ink.inkb"
+	assert_true(story2.loaded, "story_path works with .inkb files")
+	var path2 = story2.story_path
+	assert_equals(path2, "res://examples/test_story.ink.inkb", "story_path returns .inkb path")
 
 	# Test 5: Content matches between .json and .inkb paths
-	var text1 = story1.get_current_text()
+	var text1 = story1.current_text
 	var text2 = story2.continue_story()
 	assert_equals(text1, text2, "Content matches between path-loaded .json and .inkb")
 
 	# Test 6: Empty path handling
 	var story3 = InkStory.new()
-	story3.set_story_path("")
-	var empty_path = story3.get_story_path()
+	story3.story_path = ""
+	var empty_path = story3.story_path
 	assert_equals(empty_path, "", "Empty path handled correctly")
-	assert_true(story3.is_loaded() == false, "Story not loaded with empty path")
+	assert_true(story3.loaded == false, "Story not loaded with empty path")
 
 	# Test 7: Path persists after operations
 	var story4 = InkStory.new()
-	story4.set_story_path("res://examples/test_story.ink.json")
+	story4.story_path = "res://examples/test_story.ink.json"
 	story4.continue_story_maximally()
-	var path_after = story4.get_story_path()
+	var path_after = story4.story_path
 	assert_equals(path_after, "res://examples/test_story.ink.json", "Path persists after continue operations")
 
 	# Test 8: Path persists after reset
 	story4.reset_state()
-	var path_after_reset = story4.get_story_path()
+	var path_after_reset = story4.story_path
 	assert_equals(path_after_reset, "res://examples/test_story.ink.json", "Path persists after reset_state()")
 
 	# Test 9: Changing path reloads story
 	var story5 = InkStory.new()
-	story5.set_story_path("res://examples/test_story.ink.json")
+	story5.story_path = "res://examples/test_story.ink.json"
 	story5.continue_story_maximally()
-	var choice_count1 = story5.get_current_choice_count()
+	var choice_count1 = story5.choice_count
 
 	# Reload same story - should reset to beginning
-	story5.set_story_path("res://examples/test_story.ink.json")
-	assert_true(story5.can_continue(), "Story reset when path set again")
+	story5.story_path = "res://examples/test_story.ink.json"
+	assert_true(story5.can_continue, "Story reset when path set again")
 	var text_after_reload = story5.continue_story()
 	assert_contains(text_after_reload, "Welcome", "Story reloaded from beginning")
 
 	# Test 10: load_story() updates path
 	var story6 = InkStory.new()
 	story6.load_story("res://examples/test_story.ink.json")
-	var path_from_load = story6.get_story_path()
+	var path_from_load = story6.story_path
 	assert_equals(path_from_load, "res://examples/test_story.ink.json", "load_story() sets story_path property")
 
 	# Test 11: Invalid path handling
 	var story7 = InkStory.new()
-	story7.set_story_path("res://examples/nonexistent.ink.json")
+	story7.story_path = "res://examples/nonexistent.ink.json"
 	# Should fail gracefully
-	assert_true(story7.is_loaded() == false, "Invalid path via set_story_path() doesn't load")
+	assert_true(story7.loaded == false, "Invalid path via story_path doesn't load")
 	# Path might be set or empty depending on implementation
-	var invalid_path = story7.get_story_path()
-	assert_not_null(invalid_path, "get_story_path() returns value even after failed load")
+	var invalid_path = story7.story_path
+	assert_not_null(invalid_path, "story_path returns value even after failed load")
 
 	print("")
 
@@ -258,7 +258,7 @@ func test_continuation_modes():
 	var story = create_story()
 
 	# Test 1: can_continue() before any action
-	assert_true(story.can_continue(), "can_continue() returns true initially")
+	assert_true(story.can_continue, "can_continue() returns true initially")
 
 	# Test 2: continue_story() single line
 	var line1 = story.continue_story()
@@ -266,11 +266,11 @@ func test_continuation_modes():
 	assert_contains(line1, "Welcome", "First line contains expected text")
 
 	# Test 3: get_current_text() matches last continue
-	var cached_text = story.get_current_text()
+	var cached_text = story.current_text
 	assert_equals(cached_text, line1, "get_current_text() returns cached text")
 
 	# Test 4: Multiple continue_story() calls
-	assert_true(story.can_continue(), "can_continue() true after first line")
+	assert_true(story.can_continue, "can_continue() true after first line")
 	var line2 = story.continue_story()
 	assert_contains(line2, "features", "Second line contains expected text")
 
@@ -282,7 +282,7 @@ func test_continuation_modes():
 	assert_true(all_text.length() > line1.length(), "Maximal text longer than single line")
 
 	# Test 6: get_current_text() after maximally
-	var cached_max = story.get_current_text()
+	var cached_max = story.current_text
 	assert_equals(cached_max, all_text, "get_current_text() caches maximal text")
 
 	print("")
@@ -295,16 +295,16 @@ func test_choice_system():
 	var story = create_story()
 
 	# Continue to first choice point
-	while story.can_continue():
+	while story.can_continue:
 		story.continue_story()
 
 	# Test 1: Choices available
-	var choices = story.get_current_choices()
+	var choices = story.current_choices
 	assert_not_null(choices, "get_current_choices() returns array")
 	assert_true(choices.size() > 0, "Choice array not empty")
 
 	# Test 2: Choice count matches
-	var count = story.get_current_choice_count()
+	var count = story.choice_count
 	assert_equals(count, choices.size(), "get_current_choice_count() matches array size")
 
 	# Test 3: Verify we have expected choices (hub has 6 options initially)
@@ -319,22 +319,22 @@ func test_choice_system():
 
 	# Test 5: Choose and continue
 	story.choose_choice_index(0)  # Go north
-	assert_true(story.can_continue(), "can_continue() true after choice")
+	assert_true(story.can_continue, "can_continue() true after choice")
 	var text_after = story.continue_story()
 	assert_contains(text_after, "forest", "Text after choice contains expected content")
 
 	# Test 6: Multiple choice branches
 	story.reset_state()
-	while story.can_continue():
+	while story.can_continue:
 		story.continue_story()
 
-	var choice_count_start = story.get_current_choice_count()
+	var choice_count_start = story.choice_count
 	story.choose_choice_index(1)  # Go south
-	while story.can_continue():
+	while story.can_continue:
 		story.continue_story()
 
 	# Should be back at hub with different state
-	assert_true(story.get_current_choice_count() > 0, "Choices available after branch")
+	assert_true(story.choice_count > 0, "Choices available after branch")
 
 	print("")
 
@@ -348,7 +348,7 @@ func test_path_navigation():
 	# Test 1: Jump to knot
 	var success = story.choose_path_string("hub")
 	assert_true(success, "choose_path_string() to 'hub' succeeds")
-	assert_true(story.can_continue(), "can_continue() after path jump")
+	assert_true(story.can_continue, "can_continue() after path jump")
 
 	# Test 2: Content at destination
 	var text = story.continue_story()
@@ -356,14 +356,14 @@ func test_path_navigation():
 
 	# Test 3: Jump to stitch
 	story.choose_path_string("north_path.deeper")
-	assert_true(story.can_continue(), "can_continue() after stitch jump")
+	assert_true(story.can_continue, "can_continue() after stitch jump")
 	text = story.continue_story()
 	assert_contains(text, "depths", "Arrived at correct stitch")
 
 	# Test 4: get_current_path() returns value
 	story.choose_path_string("south_path")
 	story.continue_story()
-	var path = story.get_current_path()
+	var path = story.current_path
 	assert_not_null(path, "get_current_path() returns value")
 	# Note: returns hash, not human-readable string
 	assert_true(path.length() > 0, "Path is not empty")
@@ -499,7 +499,7 @@ func test_external_functions():
 	story.continue_story_maximally()
 
 	# Should be at hub with choices
-	assert_true(story.get_current_choice_count() > 0, "At hub with choices")
+	assert_true(story.choice_count > 0, "At hub with choices")
 
 	# Test 10: Choose and test zero-arg function option
 	story.choose_choice_index(0)  # Test zero-arg function
@@ -567,7 +567,7 @@ func test_external_functions():
 #	var story = create_story()
 #
 #	# Test 1: Global tags
-#	var global_tags = story.get_global_tags()
+#	var global_tags = story.global_tags
 #	assert_not_null(global_tags, "get_global_tags() returns array")
 #	assert_true(global_tags.size() > 0, "Global tags exist")
 #	assert_true("title: Comprehensive Test Story" in global_tags, "Global tag 'title' found")
@@ -575,14 +575,14 @@ func test_external_functions():
 #
 #	# Test 2: Move to a knot with tags
 #	story.choose_path_string("hub")
-#	var knot_tags = story.get_knot_tags()
+#	var knot_tags = story.knot_tags
 #	assert_not_null(knot_tags, "get_knot_tags() returns array")
 #	assert_true(knot_tags.size() > 0, "Knot tags exist")
 #	assert_true("location: hub" in knot_tags, "Knot tag 'location' found")
 #
 #	# Test 3: Continue to line with tags
 #	var text = story.continue_story()
-#	var line_tags = story.get_current_tags()
+#	var line_tags = story.tags
 #	assert_not_null(line_tags, "get_current_tags() returns array")
 #	# First line at hub has tags
 #	if line_tags.size() > 0:
@@ -591,7 +591,7 @@ func test_external_functions():
 #	# Test 4: Tagged line with multiple tags
 #	story.choose_path_string("north_path")
 #	story.continue_story()  # "You venture..."
-#	line_tags = story.get_current_tags()
+#	line_tags = story.tags
 #	if line_tags.size() > 0:
 #		assert_contains(str(line_tags), "mood", "Line tag contains expected content")
 #
@@ -606,7 +606,7 @@ func test_state_management():
 
 	# Advance story state
 	story.continue_story_maximally()
-	var choices_before = story.get_current_choice_count()
+	var choices_before = story.choice_count
 	story.choose_choice_index(0)  # Make a choice
 	story.continue_story()
 
@@ -618,7 +618,7 @@ func test_state_management():
 
 	# Test 1: reset_state() resets position
 	story.reset_state()
-	assert_true(story.can_continue(), "can_continue() true after reset")
+	assert_true(story.can_continue, "can_continue() true after reset")
 
 	# Test 2: Content is back at start
 	var first_line = story.continue_story()
@@ -627,7 +627,7 @@ func test_state_management():
 	# Test 3: Choices available at start
 	story.reset_state()
 	story.continue_story_maximally()
-	var choices_after = story.get_current_choice_count()
+	var choices_after = story.choice_count
 	assert_equals(choices_after, choices_before, "Choice count restored after reset")
 
 	# TODO: Uncomment when get_variable/set_variable implemented
@@ -638,7 +638,7 @@ func test_state_management():
 	# assert_not_null(score_after_reset, "Variable accessible after reset")
 
 	# Test 5: is_loaded() still true after reset
-	assert_true(story.is_loaded(), "Story still loaded after reset")
+	assert_true(story.loaded, "Story still loaded after reset")
 
 	print("")
 
@@ -651,25 +651,25 @@ func test_error_handling():
 	var story1 = InkStory.new()
 	var loaded = story1.load_story("res://examples/nonexistent_file.ink.json")
 	assert_true(loaded == false, "Loading invalid file returns false")
-	assert_true(story1.is_loaded() == false, "Invalid story not marked as loaded")
+	assert_true(story1.loaded == false, "Invalid story not marked as loaded")
 
 	# Test 2: Invalid choice index
 	var story2 = create_story()
 	story2.continue_story_maximally()
-	var choice_count = story2.get_current_choice_count()
+	var choice_count = story2.choice_count
 	# This should fail gracefully (not crash)
 	story2.choose_choice_index(999)
 	# Story should still be in valid state
-	assert_equals(story2.get_current_choice_count(), choice_count, "Invalid choice doesn't corrupt state")
+	assert_equals(story2.choice_count, choice_count, "Invalid choice doesn't corrupt state")
 
 	# Test 3: Continue when can't continue
 	var story3 = create_story()
 	# Fast-forward to end
 	story3.choose_path_string("victory")
-	while story3.can_continue():
+	while story3.can_continue:
 		story3.continue_story()
 
-	assert_true(story3.can_continue() == false, "can_continue() false at END")
+	assert_true(story3.can_continue == false, "can_continue() false at END")
 	var result = story3.continue_story()
 	# Should return empty string or not crash
 	assert_not_null(result, "continue_story() at END doesn't crash")
@@ -679,7 +679,7 @@ func test_error_handling():
 	var invalid_result = story4.choose_path_string("totally_invalid_path")
 	assert_true(invalid_result == false, "Invalid path returns false")
 	# Story should still be functional
-	assert_true(story4.can_continue(), "Story functional after invalid path")
+	assert_true(story4.can_continue, "Story functional after invalid path")
 
 	# TODO: Uncomment when get_variable/set_variable implemented
 	# # Test 5: Get non-existent variable
@@ -697,21 +697,21 @@ func test_edge_cases():
 	# Test 1: Story reaching END
 	var story1 = create_story()
 	story1.choose_path_string("victory")
-	while story1.can_continue():
+	while story1.can_continue:
 		story1.continue_story()
 
-	assert_true(story1.can_continue() == false, "can_continue() false at END")
-	assert_equals(story1.get_current_choice_count(), 0, "No choices at END")
+	assert_true(story1.can_continue == false, "can_continue() false at END")
+	assert_equals(story1.choice_count, 0, "No choices at END")
 
 	# Test 2: Empty choice list
-	var choices_at_end = story1.get_current_choices()
+	var choices_at_end = story1.current_choices
 	assert_not_null(choices_at_end, "get_current_choices() returns array at END")
 	assert_equals(choices_at_end.size(), 0, "Choice array empty at END")
 
 	# Test 3: Rapid sequential operations
 	var story2 = create_story()
 	for i in range(5):
-		if story2.can_continue():
+		if story2.can_continue:
 			story2.continue_story()
 	# Should not crash or corrupt state
 	assert_true(true, "Rapid continue operations succeed")
@@ -729,7 +729,7 @@ func test_edge_cases():
 		story4.continue_story_maximally()
 		story4.reset_state()
 
-	assert_true(story4.can_continue(), "Multiple resets maintain valid state")
+	assert_true(story4.can_continue, "Multiple resets maintain valid state")
 
 	print("")
 
@@ -741,34 +741,34 @@ func test_text_caching():
 	var story = create_story()
 
 	# Test 1: Initial state
-	var initial_text = story.get_current_text()
+	var initial_text = story.current_text
 	# Might be empty or might have cached text
 	assert_not_null(initial_text, "get_current_text() returns non-null initially")
 
 	# Test 2: After continue_story()
 	var line1 = story.continue_story()
-	var cached1 = story.get_current_text()
+	var cached1 = story.current_text
 	assert_equals(cached1, line1, "get_current_text() matches continue_story() result")
 
 	# Test 3: Consistency between calls
-	var cached1_again = story.get_current_text()
+	var cached1_again = story.current_text
 	assert_equals(cached1_again, cached1, "get_current_text() consistent between calls")
 
 	# Test 4: Updates after next continue
 	var line2 = story.continue_story()
-	var cached2 = story.get_current_text()
+	var cached2 = story.current_text
 	assert_equals(cached2, line2, "get_current_text() updates after new continue_story()")
 	assert_true(cached2 != cached1 or line2 == line1, "Cached text changes with new content")
 
 	# Test 5: After continue_story_maximally()
 	story.reset_state()
 	var all_text = story.continue_story_maximally()
-	var cached_max = story.get_current_text()
+	var cached_max = story.current_text
 	assert_equals(cached_max, all_text, "get_current_text() caches maximally text")
 
 	# Test 6: After reset
 	story.reset_state()
-	var after_reset = story.get_current_text()
+	var after_reset = story.current_text
 	# Should be empty or reset
 	assert_true(after_reset.length() == 0 or after_reset != cached_max, "get_current_text() clears/changes after reset")
 
@@ -776,7 +776,7 @@ func test_text_caching():
 	story.continue_story_maximally()
 	story.choose_choice_index(0)
 	var text_after_choice = story.continue_story()
-	var cached_after_choice = story.get_current_text()
+	var cached_after_choice = story.current_text
 	assert_equals(cached_after_choice, text_after_choice, "Text caching works after choice")
 
 	print("")
