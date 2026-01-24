@@ -8,6 +8,7 @@ var tests_passed = 0
 var tests_failed = 0
 var current_test = ""
 
+
 func _ready():
 	print("============================================================")
 	print("=== Godot Ink Native - Comprehensive Test Suite ===")
@@ -22,7 +23,9 @@ func _ready():
 
 	# Compile external functions test story
 	if not _compile_external_functions_story():
-		print("❌ Failed to compile external functions test story - skipping external function tests")
+		print(
+			"❌ Failed to compile external functions test story - skipping external function tests"
+		)
 
 	# Run all test categories
 	test_loading_and_compilation()
@@ -61,7 +64,9 @@ func _ready():
 	await get_tree().create_timer(0.1).timeout
 	get_tree().quit(tests_failed)
 
+
 # ===== HELPER FUNCTIONS =====
+
 
 func _compile_test_story() -> bool:
 	print("[SETUP] Compiling test story...")
@@ -75,6 +80,7 @@ func _compile_test_story() -> bool:
 		print("")
 		return false
 
+
 func _compile_external_functions_story() -> bool:
 	print("[SETUP] Compiling external functions story...")
 	var success = GDInkCompiler.compile("res://examples/external_functions.ink")
@@ -87,9 +93,11 @@ func _compile_external_functions_story() -> bool:
 		print("")
 		return false
 
+
 func start_test(test_name: String):
 	current_test = test_name
 	print("[TEST] %s" % test_name)
+
 
 func assert_true(condition: bool, message: String = ""):
 	if condition:
@@ -103,6 +111,7 @@ func assert_true(condition: bool, message: String = ""):
 		else:
 			print("  ✗ FAILED: Assertion failed in %s" % current_test)
 
+
 func assert_equals(actual, expected, message: String = ""):
 	if actual == expected:
 		tests_passed += 1
@@ -114,6 +123,7 @@ func assert_equals(actual, expected, message: String = ""):
 			print("  ✗ FAILED: %s (expected %s, got %s)" % [message, expected, actual])
 		else:
 			print("  ✗ FAILED: Expected %s, got %s" % [expected, actual])
+
 
 func assert_not_null(value, message: String = ""):
 	if value != null:
@@ -127,6 +137,7 @@ func assert_not_null(value, message: String = ""):
 		else:
 			print("  ✗ FAILED: Value was null")
 
+
 func assert_contains(text: String, substring: String, message: String = ""):
 	if substring in text:
 		tests_passed += 1
@@ -139,12 +150,15 @@ func assert_contains(text: String, substring: String, message: String = ""):
 		else:
 			print("  ✗ FAILED: '%s' not found in '%s'" % [substring, text])
 
+
 func create_story() -> InkStory:
 	var story = InkStory.new()
 	story.load_story("res://examples/test_story.ink.json")
 	return story
 
+
 # ===== TEST CATEGORY 1: LOADING AND COMPILATION =====
+
 
 func test_loading_and_compilation():
 	start_test("Loading and Compilation")
@@ -172,7 +186,9 @@ func test_loading_and_compilation():
 
 	print("")
 
+
 # ===== TEST CATEGORY 2: RESOURCE PROPERTIES =====
+
 
 func test_resource_properties():
 	start_test("Resource Properties")
@@ -184,7 +200,9 @@ func test_resource_properties():
 
 	# Test 2: story_path property returns set path
 	var path1 = story1.story_path
-	assert_equals(path1, "res://examples/test_story.ink.json", "story_path property returns correct path")
+	assert_equals(
+		path1, "res://examples/test_story.ink.json", "story_path property returns correct path"
+	)
 
 	# Test 3: Story is functional after setting story_path
 	var text = story1.continue_story()
@@ -215,12 +233,16 @@ func test_resource_properties():
 	story4.story_path = "res://examples/test_story.ink.json"
 	story4.continue_story_maximally()
 	var path_after = story4.story_path
-	assert_equals(path_after, "res://examples/test_story.ink.json", "Path persists after continue operations")
+	assert_equals(
+		path_after, "res://examples/test_story.ink.json", "Path persists after continue operations"
+	)
 
 	# Test 8: Path persists after reset
 	story4.reset_state()
 	var path_after_reset = story4.story_path
-	assert_equals(path_after_reset, "res://examples/test_story.ink.json", "Path persists after reset_state()")
+	assert_equals(
+		path_after_reset, "res://examples/test_story.ink.json", "Path persists after reset_state()"
+	)
 
 	# Test 9: Changing path reloads story
 	var story5 = InkStory.new()
@@ -238,7 +260,11 @@ func test_resource_properties():
 	var story6 = InkStory.new()
 	story6.load_story("res://examples/test_story.ink.json")
 	var path_from_load = story6.story_path
-	assert_equals(path_from_load, "res://examples/test_story.ink.json", "load_story() sets story_path property")
+	assert_equals(
+		path_from_load,
+		"res://examples/test_story.ink.json",
+		"load_story() sets story_path property"
+	)
 
 	# Test 11: Invalid path handling
 	var story7 = InkStory.new()
@@ -251,7 +277,9 @@ func test_resource_properties():
 
 	print("")
 
+
 # ===== TEST CATEGORY 3: CONTINUATION MODES =====
+
 
 func test_continuation_modes():
 	start_test("Continuation Modes")
@@ -288,7 +316,9 @@ func test_continuation_modes():
 
 	print("")
 
+
 # ===== TEST CATEGORY 4: CHOICE SYSTEM =====
+
 
 func test_choice_system():
 	start_test("Choice System")
@@ -339,7 +369,9 @@ func test_choice_system():
 
 	print("")
 
+
 # ===== TEST CATEGORY 5: PATH NAVIGATION =====
+
 
 func test_path_navigation():
 	start_test("Path Navigation")
@@ -375,7 +407,9 @@ func test_path_navigation():
 
 	print("")
 
+
 # ===== TEST CATEGORY 6: VARIABLE OPERATIONS =====
+
 
 func test_variable_operations():
 	start_test("Variable Operations")
@@ -441,7 +475,9 @@ func test_variable_operations():
 
 	print("")
 
+
 # ===== TEST CATEGORY 7: EXTERNAL FUNCTIONS =====
+
 
 func test_external_functions():
 	start_test("External Functions")
@@ -451,7 +487,10 @@ func test_external_functions():
 
 	# Test 1: Bind zero-argument function
 	story.bind_external_function("get_player_name", func(): return "TestHero")
-	assert_true(story.has_external_function("get_player_name"), "has_external_function() returns true after binding")
+	assert_true(
+		story.has_external_function("get_player_name"),
+		"has_external_function() returns true after binding"
+	)
 
 	# Test 2: Bind function with return value
 	story.bind_external_function("roll_dice", func(): return randi() % 6 + 1)
@@ -510,7 +549,10 @@ func test_external_functions():
 	# Test 11: Test unbind_external_function
 	story.reset_state()
 	story.unbind_external_function("get_player_name")
-	assert_true(story.has_external_function("get_player_name") == false, "unbind_external_function() removes binding")
+	assert_true(
+		story.has_external_function("get_player_name") == false,
+		"unbind_external_function() removes binding"
+	)
 
 	# Test 12: Unbound function behavior (should print error but not crash)
 	text = story.continue_story()
@@ -518,14 +560,19 @@ func test_external_functions():
 
 	# Test 13: Rebind after unbind
 	story.bind_external_function("get_player_name", func(): return "ReboundHero")
-	assert_true(story.has_external_function("get_player_name"), "Function can be rebound after unbinding")
+	assert_true(
+		story.has_external_function("get_player_name"), "Function can be rebound after unbinding"
+	)
 
 	# Test 14: Test with lookahead_safe parameter
 	var side_effect_count = 0
-	story.bind_external_function("side_effect_func", func():
-		side_effect_count += 1
-		return side_effect_count
-	, false)  # Not lookahead safe
+	story.bind_external_function(
+		"side_effect_func",
+		func():
+			side_effect_count += 1
+			return side_effect_count,
+		false
+	)  # Not lookahead safe
 	assert_true(story.has_external_function("side_effect_func"), "Function with side effects bound")
 
 	# Test 15: Different return types
@@ -558,6 +605,7 @@ func test_external_functions():
 	assert_not_null(text, "Story handles unbound functions gracefully")
 
 	print("")
+
 
 # ===== TEST CATEGORY 8: TAG HIERARCHY =====
 # TODO: Uncomment when get_global_tags/get_knot_tags API is implemented
@@ -599,6 +647,7 @@ func test_external_functions():
 #	print("")
 
 # ===== TEST CATEGORY 9: STATE MANAGEMENT =====
+
 
 func test_state_management():
 	start_test("State Management")
@@ -643,7 +692,9 @@ func test_state_management():
 
 	print("")
 
+
 # ===== TEST CATEGORY 10: ERROR HANDLING =====
+
 
 func test_error_handling():
 	start_test("Error Handling")
@@ -690,7 +741,9 @@ func test_error_handling():
 
 	print("")
 
+
 # ===== TEST CATEGORY 11: EDGE CASES =====
+
 
 func test_edge_cases():
 	start_test("Edge Cases")
@@ -734,7 +787,9 @@ func test_edge_cases():
 
 	print("")
 
+
 # ===== TEST CATEGORY 12: TEXT CACHING =====
+
 
 func test_text_caching():
 	start_test("Text Caching")
@@ -771,7 +826,10 @@ func test_text_caching():
 	story.reset_state()
 	var after_reset = story.current_text
 	# Should be empty or reset
-	assert_true(after_reset.length() == 0 or after_reset != cached_max, "get_current_text() clears/changes after reset")
+	assert_true(
+		after_reset.length() == 0 or after_reset != cached_max,
+		"get_current_text() clears/changes after reset"
+	)
 
 	# Test 7: After choice selection
 	story.continue_story_maximally()
@@ -782,7 +840,9 @@ func test_text_caching():
 
 	print("")
 
+
 # ===== TEST CATEGORY 13: IMPORT PLUGIN =====
+
 
 func test_import_plugin():
 	start_test("Import Plugin")

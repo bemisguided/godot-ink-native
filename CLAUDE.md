@@ -862,6 +862,165 @@ All scripts include:
 
 For detailed script documentation, see [scripts/README.md](scripts/README.md).
 
+## 11. GDScript Code Style (gdformat & gdlint)
+
+The project uses **gdformat** and **gdlint** from the gdtoolkit package to enforce consistent GDScript code style in the addon and demo test files.
+
+### Installation
+
+**Package:** `gdtoolkit==4.*` (formatter and linter for GDScript)
+
+```bash
+pip3 install --index-url https://pypi.org/simple/ "gdtoolkit==4.*"
+```
+
+**Verify installation:**
+```bash
+gdformat --version  # Should show 4.x.x
+gdlint --version    # Should show 4.x.x
+```
+
+### Configuration Files
+
+**`.gdformat`** - Formatter settings
+```ini
+line_length: 100
+```
+- Sets maximum line length to 100 characters
+- Uses tabs for indentation (gdformat default)
+- All other formatting rules are non-configurable
+
+**`.gdlintrc`** - Linter configuration
+```json
+{}
+```
+- Empty configuration = uses all gdlint default rules
+- No custom rule overrides
+
+**`.gdlintrcignore`** - Excluded paths
+```
+.git
+libs
+build
+demo/addons
+```
+- Excludes third-party dependencies (`libs/godot/godot-cpp-*`)
+- Excludes build artifacts (`build/`)
+- Excludes generated addon copies (`demo/addons/`)
+
+### Wrapper Scripts
+
+**`scripts/gdformat.sh`** - Format all GDScript files
+- Finds all `.gd` files recursively
+- Respects `.gdlintrcignore` exclusions
+- Forwards all arguments to `gdformat`
+
+**`scripts/gdlint.sh`** - Lint all GDScript files
+- Finds all `.gd` files recursively
+- Respects `.gdlintrcignore` exclusions
+- Forwards all arguments to `gdlint`
+
+### Usage
+
+**Format code (auto-fix):**
+```bash
+./scripts/gdformat.sh
+```
+
+**Check formatting without modifying:**
+```bash
+./scripts/gdformat.sh --check
+```
+
+**Show formatting diffs:**
+```bash
+./scripts/gdformat.sh --diff
+```
+
+**Lint code (check for violations):**
+```bash
+./scripts/gdlint.sh
+```
+
+**Verbose linting output:**
+```bash
+./scripts/gdlint.sh --verbose
+```
+
+### Workflow
+
+**Before committing GDScript changes:**
+```bash
+# 1. Auto-format all files
+./scripts/gdformat.sh
+
+# 2. Check for linting violations
+./scripts/gdlint.sh
+
+# 3. Fix any reported issues manually
+# 4. Commit changes
+```
+
+### Scope
+
+**GDScript files formatted/linted:**
+- `addon/*.gd` - Plugin implementation files
+  - `gd_ink_compiler.gd` - JSON compilation wrapper
+  - `ink_story_importer.gd` - Import plugin for `.ink.json` files
+  - `ink_plugin.gd` - EditorPlugin entry point
+- `demo/tests/*.gd` - Test suite files
+  - `test_comprehensive.gd` - Comprehensive test suite
+
+**GDScript files excluded:**
+- `libs/godot/godot-cpp-*/test/**/*.gd` - Third-party test files
+- `build/**/*.gd` - Build artifacts (copies of addon files)
+- `demo/addons/**/*.gd` - Release package copies (generated from addon/)
+
+### Code Style Rules
+
+**Enforced by gdformat (automatic):**
+- Indentation: tabs (not spaces)
+- Line length: 100 characters maximum
+- Consistent spacing around operators
+- Standard GDScript formatting conventions
+
+**Enforced by gdlint (warnings/errors):**
+- Function naming: `snake_case`
+- Class naming: `PascalCase`
+- Private members: prefix with `_`
+- Type annotations required
+- Line length violations
+- Code complexity checks
+
+### Integration
+
+**Manual workflow:**
+- No pre-commit hooks (developer responsibility)
+- No CI integration
+- Developers must run scripts before committing
+
+**Future improvements:**
+- Add pre-commit Git hooks for automatic formatting
+- Add CI checks to validate formatting in pull requests
+
+### Common Flags
+
+**gdformat flags:**
+- `--check` - Check if files need formatting (exit code 1 if changes needed)
+- `--diff` - Show what would change without modifying files
+- `--line-length N` - Override line length (default: from `.gdformat`)
+
+**gdlint flags:**
+- `--verbose` - Show detailed violation information
+- (Most configuration via `.gdlintrc` file)
+
+### Notes
+
+- **gdformat is uncompromising:** Only line length and indentation style are configurable; all other formatting is standardized
+- **Tab indentation:** This project uses tabs (consistent with Godot editor defaults)
+- **Line length:** 100 characters matches C++ style guide for consistency
+- **Default rules:** Using empty `.gdlintrc` means project follows all GDScript community best practices
+
 ---
 
 ## Summary Checklist
@@ -876,6 +1035,8 @@ For detailed script documentation, see [scripts/README.md](scripts/README.md).
 - [ ] CMake reconfigured if new files added
 - [ ] Builds without errors
 - [ ] Tested in Godot
+- [ ] GDScript files formatted: `./scripts/gdformat.sh`
+- [ ] GDScript files linted: `./scripts/gdlint.sh`
 
 **Before releasing:**
 - [ ] All platforms build successfully

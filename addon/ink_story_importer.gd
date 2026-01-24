@@ -71,8 +71,13 @@ func _get_option_visibility(_path: String, _option_name: StringName, _options: D
 	return true
 
 
-func _import(source_file: String, save_path: String, options: Dictionary,
-             _platform_variants: Array[String], _gen_files: Array[String]) -> Error:
+func _import(
+	source_file: String,
+	save_path: String,
+	options: Dictionary,
+	_platform_variants: Array[String],
+	_gen_files: Array[String]
+) -> Error:
 	print("Ink Importer: Starting import of %s" % source_file)
 
 	# Step 1: Compile .ink to .ink.json using inklecate
@@ -116,7 +121,12 @@ func _import(source_file: String, save_path: String, options: Dictionary,
 	var save_error = ResourceSaver.save(story, full_save_path, save_flags)
 
 	if save_error != OK:
-		push_error("Ink Importer: Failed to save imported resource: %s (error: %d)" % [full_save_path, save_error])
+		push_error(
+			(
+				"Ink Importer: Failed to save imported resource: %s (error: %d)"
+				% [full_save_path, save_error]
+			)
+		)
 		_cleanup_temp_files([json_temp_path, binary_temp_path])
 		return save_error
 
@@ -143,4 +153,6 @@ func _cleanup_temp_files(paths: Array) -> void:
 		if FileAccess.file_exists(path):
 			var error = DirAccess.remove_absolute(ProjectSettings.globalize_path(path))
 			if error != OK:
-				push_warning("Ink Importer: Failed to delete temp file: %s (error: %d)" % [path, error])
+				push_warning(
+					"Ink Importer: Failed to delete temp file: %s (error: %d)" % [path, error]
+				)

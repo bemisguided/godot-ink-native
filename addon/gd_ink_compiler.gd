@@ -7,6 +7,7 @@ extends RefCounted
 ## This tool wraps the inklecate binary to compile .ink files to .ink.json format
 ## within the Godot editor. Automatically detects the correct platform-specific binary.
 
+
 ## Compiles an Ink source file to JSON format using inklecate
 ##
 ## @param source_path: Path to .ink source file (e.g., "res://story.ink")

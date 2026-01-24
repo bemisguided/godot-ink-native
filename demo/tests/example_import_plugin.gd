@@ -7,6 +7,7 @@ extends Node
 ## - load("res://path.ink") loads the compiled resource
 ## - No manual compilation needed
 
+
 func _ready():
 	print("=== Ink Import Plugin Test ===\n")
 
@@ -80,4 +81,4 @@ func _ready():
 
 	print("\n=== All Tests Completed ===")
 	print("✅ Import plugin is working correctly!")
-	print("\nKey takeaway: You can now use load(\"res://story.ink\") directly in your projects!")
+	print('\nKey takeaway: You can now use load("res://story.ink") directly in your projects!')
