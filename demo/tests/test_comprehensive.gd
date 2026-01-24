@@ -75,10 +75,9 @@ func _compile_test_story() -> bool:
 		print("  ✅ Test story compiled successfully")
 		print("")
 		return true
-	else:
-		print("  ❌ Compilation failed")
-		print("")
-		return false
+	print("  ❌ Compilation failed")
+	print("")
+	return false
 
 
 func _compile_external_functions_story() -> bool:
@@ -88,10 +87,9 @@ func _compile_external_functions_story() -> bool:
 		print("  ✅ External functions story compiled successfully")
 		print("")
 		return true
-	else:
-		print("  ❌ Compilation failed")
-		print("")
-		return false
+	print("  ❌ Compilation failed")
+	print("")
+	return false
 
 
 func start_test(test_name: String):

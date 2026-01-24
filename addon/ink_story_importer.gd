@@ -46,7 +46,7 @@ func _get_preset_count() -> int:
 	return 1
 
 
-func _get_preset_name(preset_index: int) -> String:
+func _get_preset_name(_preset_index: int) -> String:
 	return "Default"
 
 
@@ -82,42 +82,79 @@ func _import(
 
 	# Step 1: Compile .ink to .ink.json using inklecate
 	var json_temp_path = _get_temp_path(source_file, ".ink.json")
+	var binary_temp_path = _get_temp_path(source_file, ".inkb")
+	var result = _compile_to_json(source_file, json_temp_path)
 
-	if not GDInkCompiler.compile(source_file, json_temp_path):
+	if result != OK:
+		return result
+
+	# Step 2: Compile .ink.json to .inkb using InkCompiler
+	result = _compile_to_binary(json_temp_path, binary_temp_path)
+
+	if result != OK:
+		_cleanup_temp_files([json_temp_path])
+		return result
+
+	# Step 3: Create and save InkStory resource
+	result = _create_and_save_resource(binary_temp_path, save_path, options)
+
+	# Step 4: Cleanup temporary files
+	_cleanup_temp_files([json_temp_path, binary_temp_path])
+
+	if result == OK:
+		print("Ink Importer: Successfully imported %s" % source_file)
+
+	return result
+
+
+## Compile .ink file to .ink.json using inklecate
+## @param source_file: Source .ink file path
+## @param json_path: Output .ink.json file path
+## @return: OK on success, error code on failure
+func _compile_to_json(source_file: String, json_path: String) -> Error:
+	if not GDInkCompiler.compile(source_file, json_path):
 		push_error("Ink Importer: Failed to compile .ink to .json: %s" % source_file)
 		return ERR_COMPILATION_FAILED
 
-	# Verify JSON was created
-	if not FileAccess.file_exists(json_temp_path):
-		push_error("Ink Importer: JSON file not created: %s" % json_temp_path)
+	if not FileAccess.file_exists(json_path):
+		push_error("Ink Importer: JSON file not created: %s" % json_path)
 		return ERR_FILE_CANT_WRITE
 
-	# Step 2: Compile .ink.json to .inkb using InkCompiler
-	var binary_temp_path = _get_temp_path(source_file, ".inkb")
+	return OK
 
-	if not InkCompiler.compile_json_file(json_temp_path, binary_temp_path):
-		push_error("Ink Importer: Failed to compile .json to .inkb: %s" % json_temp_path)
-		_cleanup_temp_files([json_temp_path])
+
+## Compile .ink.json to .inkb using InkCompiler
+## @param json_path: Source .ink.json file path
+## @param binary_path: Output .inkb file path
+## @return: OK on success, error code on failure
+func _compile_to_binary(json_path: String, binary_path: String) -> Error:
+	if not InkCompiler.compile_json_file(json_path, binary_path):
+		push_error("Ink Importer: Failed to compile .json to .inkb: %s" % json_path)
 		return ERR_COMPILATION_FAILED
 
-	# Verify binary was created
-	if not FileAccess.file_exists(binary_temp_path):
-		push_error("Ink Importer: Binary file not created: %s" % binary_temp_path)
-		_cleanup_temp_files([json_temp_path])
+	if not FileAccess.file_exists(binary_path):
+		push_error("Ink Importer: Binary file not created: %s" % binary_path)
 		return ERR_FILE_CANT_WRITE
 
-	# Step 3: Create InkStory resource and load the binary
+	return OK
+
+
+## Create InkStory resource and save it
+## @param binary_path: Source .inkb file path
+## @param save_path: Output resource path (without extension)
+## @param options: Import options dictionary
+## @return: OK on success, error code on failure
+func _create_and_save_resource(
+	binary_path: String, save_path: String, options: Dictionary
+) -> Error:
 	var story = InkStory.new()
 
-	if not story.load_story(binary_temp_path):
-		push_error("Ink Importer: Failed to load story from binary: %s" % binary_temp_path)
-		_cleanup_temp_files([json_temp_path, binary_temp_path])
+	if not story.load_story(binary_path):
+		push_error("Ink Importer: Failed to load story from binary: %s" % binary_path)
 		return ERR_INVALID_DATA
 
-	# Step 4: Save as imported resource
 	var full_save_path = save_path + "." + _get_save_extension()
 	var save_flags = ResourceSaver.FLAG_COMPRESS if options.get("compress", true) else 0
-
 	var save_error = ResourceSaver.save(story, full_save_path, save_flags)
 
 	if save_error != OK:
@@ -127,14 +164,8 @@ func _import(
 				% [full_save_path, save_error]
 			)
 		)
-		_cleanup_temp_files([json_temp_path, binary_temp_path])
-		return save_error
 
-	# Step 5: Cleanup temporary files
-	_cleanup_temp_files([json_temp_path, binary_temp_path])
-
-	print("Ink Importer: Successfully imported %s" % source_file)
-	return OK
+	return save_error
 
 
 ## Generates a temporary file path based on source file
