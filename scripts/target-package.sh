@@ -1,14 +1,8 @@
 #!/usr/bin/env bash
 
-<<<<<<< Updated upstream
-# Script: target-release.sh
-# Description: Build and create release package for a specific Godot version
-# Usage: ./scripts/target-release.sh <version|all>
-=======
 # Script: target-package.sh
 # Description: Package complete single-platform addon for a specific Godot version
 # Usage: ./scripts/target-package.sh <version|all>
->>>>>>> Stashed changes
 
 # Source common functions
 source "$(dirname "${BASH_SOURCE[0]}")/_common.sh"
@@ -17,31 +11,18 @@ show_help() {
     cat << EOF
 Usage: $(basename "$0") <version|all>
 
-<<<<<<< Updated upstream
-Build and create release package for a specific Godot version.
-
-Arguments:
-  version      Godot version to release for (4.4, 4.5, or all)
-=======
 Package complete single-platform addon for a specific Godot version.
 
 Arguments:
   version      Godot version to package for (4.4, 4.5, or all)
->>>>>>> Stashed changes
 
 Options:
   -h, --help   Show this help message
 
 Examples:
-<<<<<<< Updated upstream
-  $(basename "$0") 4.4     # Build and package 4.4
-  $(basename "$0") 4.5     # Build and package 4.5
-  $(basename "$0") all     # Build and package all versions
-=======
   $(basename "$0") 4.4     # Package 4.4
   $(basename "$0") 4.5     # Package 4.5
   $(basename "$0") all     # Package all versions
->>>>>>> Stashed changes
 
 EOF
 }
