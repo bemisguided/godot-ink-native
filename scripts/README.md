@@ -17,7 +17,7 @@ This directory contains convenience scripts for common development tasks. These 
 | ---------------------- | -------------------------------------------------------- |
 | `target-build.sh`      | Build for a specific Godot version or all versions       |
 | `target-clean.sh`      | Clean build artifacts for specific version(s)            |
-| `target-release.sh`    | Build and create release package(s)                      |
+| `target-package.sh`    | Build and create release package(s)                      |
 | `lib-update.sh`        | Update library submodules (godot-cpp, inkcpp, or all)    |
 | `lib-show-versions.sh` | Display current versions of all dependency submodules    |
 | `lib-pin-ink.sh`       | Pin inkcpp submodule to a specific tag version           |
@@ -70,17 +70,17 @@ Clean build artifacts for specific Godot version(s).
 **Arguments:**
 - `version` - Version to clean (4.4, 4.5, or all, default: show status)
 
-### `target-release.sh`
+### `target-package.sh`
 
-Build and create release package for specific version(s).
+Package complete addon for specific version(s).
 
 ```bash
 # Syntax
-./scripts/target-release.sh <4.4|4.5|all>
+./scripts/target-package.sh <4.4|4.5|all>
 
 # Examples
-./scripts/target-release.sh 4.4     # Create release for Godot 4.4
-./scripts/target-release.sh all     # Create releases for all versions
+./scripts/target-package.sh 4.4     # Create release for Godot 4.4
+./scripts/target-package.sh all     # Create releases for all versions
 ```
 
 **Arguments:**
@@ -178,7 +178,7 @@ Extract release package into `demo/addons/gd-ink-native` for testing.
 ```
 
 **Prerequisites:**
-- Release package must exist (run `target-release.sh` first)
+- Release package must exist (run `target-package.sh` first)
 
 ### `validate-run.sh`
 
@@ -219,7 +219,7 @@ export GODOT_APP=/path/to/godot
 ./scripts/target-build.sh 4.4
 
 # 2. Create release package
-./scripts/target-release.sh 4.4
+./scripts/target-package.sh 4.4
 
 # 3. Install to demo for testing
 ./scripts/validate-setup.sh 4.4
@@ -232,7 +232,7 @@ export GODOT_APP=/path/to/godot
 
 ```bash
 # Build and package for all supported Godot versions
-./scripts/target-release.sh all
+./scripts/target-package.sh all
 
 # Output will be in release/ directory:
 # - godot-ink-0.1.0-godot4.4-macos.zip
@@ -260,7 +260,7 @@ git commit -m "Update dependency submodules"
 ```bash
 # Make code changes, then:
 ./scripts/target-build.sh 4.4         # Incremental build (fast!)
-./scripts/target-release.sh 4.4       # Package it
+./scripts/target-package.sh 4.4       # Package it
 ./scripts/validate-setup.sh 4.4           # Install to demo
 ./scripts/validate-run.sh                 # Run tests
 ```
@@ -282,7 +282,7 @@ All scripts include:
 # Target operations (version-specific)
 target-build.sh <4.4|4.5|all> [options]
 target-clean.sh [4.4|4.5|all]
-target-release.sh <4.4|4.5|all>
+target-package.sh <4.4|4.5|all>
 
 # Library operations (component-specific)
 lib-update.sh [godot|ink|all]     # Default: all
@@ -317,7 +317,7 @@ git submodule update --init --recursive
 Build a release first:
 
 ```bash
-./scripts/target-release.sh 4.4
+./scripts/target-package.sh 4.4
 ```
 
 ### Permission Denied

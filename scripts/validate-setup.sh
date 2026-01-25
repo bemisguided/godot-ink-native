@@ -42,7 +42,7 @@ GODOT_VERSION="${1:-}"
 # Check if release directory exists
 if [ ! -d "release" ]; then
     log_error "Release directory not found: release/"
-    log_error "Build a release first with: scripts/target-release.sh"
+    log_error "Build a release first with: scripts/target-package.sh"
     exit 1
 fi
 
@@ -59,7 +59,7 @@ if [ -n "$GODOT_VERSION" ]; then
 
     if [ -z "$PACKAGE" ]; then
         log_error "No release package found for Godot $GODOT_VERSION"
-        log_error "Build one first with: scripts/target-release.sh $GODOT_VERSION"
+        log_error "Build one first with: scripts/target-package.sh $GODOT_VERSION"
         exit 1
     fi
 else
@@ -72,7 +72,7 @@ else
 
     if [ -z "$PACKAGE" ]; then
         log_error "No release packages found in release/"
-        log_error "Build one first with: scripts/target-release.sh 4.4"
+        log_error "Build one first with: scripts/target-package.sh 4.4"
         exit 1
     fi
 fi
