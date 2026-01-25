@@ -19,7 +19,7 @@ Quick reference guide for AI assistants working on godot-ink-native.
 **Build & Release:**
 - `./scripts/target-build.sh <version|all> [build_type] [--clean]` - Build for specific Godot version or all versions (incremental by default)
 - `./scripts/target-clean.sh [version|all]` - Clean build artifacts for specific version(s)
-- `./scripts/target-release.sh <version|all>` - Build and create release package(s)
+- `./scripts/target-package.sh <version|all>` - Build and create release package(s)
 
 **Validation:**
 - `./scripts/validate-run.sh` - Run demo project tests using Godot (requires GODOT_APP env var)
@@ -47,14 +47,14 @@ Quick reference guide for AI assistants working on godot-ink-native.
 
 **Create release:**
 ```bash
-./scripts/target-release.sh 4.4
+./scripts/target-package.sh 4.4
 # Output: release/godot-ink-0.1.0-godot4.4-macos.zip
 ```
 
 **Build all versions:**
 ```bash
 ./scripts/target-build.sh all
-./scripts/target-release.sh all
+./scripts/target-package.sh all
 ```
 
 **Update dependencies (requires git permission):**
@@ -373,7 +373,7 @@ String: {concat("Hello", " World")}
 ./scripts/target-build.sh 4.4 --clean
 
 # Create release package
-./scripts/target-release.sh 4.4
+./scripts/target-package.sh 4.4
 
 # Install to demo and test
 ./scripts/validate-setup.sh 4.4
@@ -751,13 +751,13 @@ int InkExample::get_data() const {
 ```bash
 # Incremental build (fast)
 ./scripts/target-build.sh 4.4
-./scripts/target-release.sh 4.4
+./scripts/target-package.sh 4.4
 ./scripts/validate-setup.sh 4.4
 ./scripts/validate-run.sh
 
 # Clean build (after dependency updates)
 ./scripts/target-build.sh 4.4 --clean
-./scripts/target-release.sh 4.4
+./scripts/target-package.sh 4.4
 ```
 
 ### Switch Godot Version (⚠️ USE SCRIPTS - See Section 2)
@@ -812,7 +812,7 @@ int InkExample::get_data() const {
 ```bash
 # Build, package, and test for Godot 4.4
 ./scripts/target-build.sh 4.4
-./scripts/target-release.sh 4.4
+./scripts/target-package.sh 4.4
 ./scripts/validate-setup.sh 4.4
 ./scripts/validate-run.sh
 ```

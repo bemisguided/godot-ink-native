@@ -251,53 +251,105 @@ configure_file(
     @ONLY
 )
 
-# Custom target: release
-# Creates a distributable addon package in release/
-add_custom_target(release
-    # Create directories
-    COMMAND ${CMAKE_COMMAND} -E echo "Creating release package for Godot ${GODOT_VERSION}..."
-    COMMAND ${CMAKE_COMMAND} -E make_directory "${CMAKE_SOURCE_DIR}/release"
-    COMMAND ${CMAKE_COMMAND} -E make_directory "${CMAKE_BINARY_DIR}/release"
-    COMMAND ${CMAKE_COMMAND} -E make_directory "${CMAKE_BINARY_DIR}/release/bin"
+# Function: create_release_target
+# Parameters:
+#   TARGET_NAME - Name of the custom target (e.g., "release", "release-libs")
+#   INCLUDE_ADDON - TRUE to include addon wrapper files, FALSE for binary-only
+#   OUTPUT_PREFIX - Filename prefix ("godot-ink" or "godot-ink-libs")
+function(create_release_target TARGET_NAME INCLUDE_ADDON OUTPUT_PREFIX)
+    if(${INCLUDE_ADDON})
+        # Full addon release (with wrapper files)
+        add_custom_target(${TARGET_NAME}
+            # Create temp directory for packaging
+            COMMAND ${CMAKE_COMMAND} -E rm -rf "${CMAKE_BINARY_DIR}/${TARGET_NAME}-temp"
+            COMMAND ${CMAKE_COMMAND} -E make_directory "${CMAKE_BINARY_DIR}/${TARGET_NAME}-temp"
+            COMMAND ${CMAKE_COMMAND} -E make_directory "${CMAKE_BINARY_DIR}/${TARGET_NAME}-temp/bin"
 
-    # Copy addon source files (excluding .in template)
-    COMMAND ${CMAKE_COMMAND} -E copy_directory
-        "${CMAKE_SOURCE_DIR}/addon"
-        "${CMAKE_BINARY_DIR}/release"
+            # Copy addon files
+            COMMAND ${CMAKE_COMMAND} -E copy_directory
+                "${CMAKE_SOURCE_DIR}/addon"
+                "${CMAKE_BINARY_DIR}/${TARGET_NAME}-temp"
 
-    # Copy the configured gd-ink-native.gdextension file (overwriting the .in template)
-    COMMAND ${CMAKE_COMMAND} -E copy
-        "${CMAKE_BINARY_DIR}/gd-ink-native.gdextension"
-        "${CMAKE_BINARY_DIR}/release/gd-ink-native.gdextension"
+            COMMAND ${CMAKE_COMMAND} -E copy
+                "${CMAKE_BINARY_DIR}/gd-ink-native.gdextension"
+                "${CMAKE_BINARY_DIR}/${TARGET_NAME}-temp/gd-ink-native.gdextension"
 
-    # Remove the .in template file from the package
-    COMMAND ${CMAKE_COMMAND} -E remove
-        "${CMAKE_BINARY_DIR}/release/gd-ink-native.gdextension.in"
+            COMMAND ${CMAKE_COMMAND} -E remove
+                "${CMAKE_BINARY_DIR}/${TARGET_NAME}-temp/gd-ink-native.gdextension.in"
 
-    # Copy binary (macOS: entire framework bundle, others: library file)
-    COMMAND ${CMAKE_COMMAND} -E
-        $<IF:$<STREQUAL:${GODOT_PLATFORM},macos>,copy_directory,copy>
-        "$<IF:$<STREQUAL:${GODOT_PLATFORM},macos>,$<TARGET_BUNDLE_DIR:${PROJECT_NAME}>,$<TARGET_FILE:${PROJECT_NAME}>>"
-        "${CMAKE_BINARY_DIR}/release/bin/$<TARGET_FILE_NAME:${PROJECT_NAME}>"
+            # Copy binary (macOS: entire framework bundle, others: library file)
+            COMMAND ${CMAKE_COMMAND} -E
+                $<IF:$<STREQUAL:${GODOT_PLATFORM},macos>,copy_directory,copy>
+                "$<IF:$<STREQUAL:${GODOT_PLATFORM},macos>,$<TARGET_BUNDLE_DIR:${PROJECT_NAME}>,$<TARGET_FILE:${PROJECT_NAME}>>"
+                "${CMAKE_BINARY_DIR}/${TARGET_NAME}-temp/bin/$<TARGET_FILE_NAME:${PROJECT_NAME}>"
 
-    # Copy inklecate binary if available (optional, for runtime Ink compilation)
-    COMMAND ${CMAKE_COMMAND} -E copy_if_different
-        "${CMAKE_SOURCE_DIR}/bin/${INKLECATE_EXECUTABLE}"
-        "${CMAKE_BINARY_DIR}/release/bin/${INKLECATE_EXECUTABLE}" || true
+            # Copy inklecate if available (optional)
+            COMMAND ${CMAKE_COMMAND} -E copy_if_different
+                "${CMAKE_SOURCE_DIR}/bin/${INKLECATE_EXECUTABLE}"
+                "${CMAKE_BINARY_DIR}/${TARGET_NAME}-temp/bin/${INKLECATE_EXECUTABLE}" || true
 
-    # Create zip archive with platform-specific naming
-    COMMAND ${CMAKE_COMMAND} -E chdir "${CMAKE_BINARY_DIR}/release"
-        ${CMAKE_COMMAND} -E tar "cf"
-        "${CMAKE_SOURCE_DIR}/release/godot-ink-${PROJECT_VERSION}-godot${GODOT_VERSION}-${GODOT_PLATFORM}$<$<NOT:$<STREQUAL:${GODOT_PLATFORM},macos>>:-${GODOT_ARCH}>.zip"
-        --format=zip
-        .
+            # Create output directory
+            COMMAND ${CMAKE_COMMAND} -E make_directory "${CMAKE_SOURCE_DIR}/release"
 
-    COMMAND ${CMAKE_COMMAND} -E echo "✅ Package created: release/godot-ink-${PROJECT_VERSION}-godot${GODOT_VERSION}-${GODOT_PLATFORM}.zip"
+            # Create zip archive
+            COMMAND ${CMAKE_COMMAND} -E chdir "${CMAKE_BINARY_DIR}/${TARGET_NAME}-temp"
+                ${CMAKE_COMMAND} -E tar "cf"
+                "${CMAKE_SOURCE_DIR}/release/${OUTPUT_PREFIX}-${PROJECT_VERSION}-godot${GODOT_VERSION}-${GODOT_PLATFORM}$<$<NOT:$<STREQUAL:${GODOT_PLATFORM},macos>>:-${GODOT_ARCH}>.zip"
+                --format=zip
+                .
 
-    DEPENDS ${PROJECT_NAME}
-    COMMENT "Packaging addon for distribution"
-    VERBATIM
-)
+            # Cleanup temp directory
+            COMMAND ${CMAKE_COMMAND} -E rm -rf "${CMAKE_BINARY_DIR}/${TARGET_NAME}-temp"
+
+            COMMAND ${CMAKE_COMMAND} -E echo "✅ Package created: release/${OUTPUT_PREFIX}-${PROJECT_VERSION}-godot${GODOT_VERSION}-${GODOT_PLATFORM}.zip"
+
+            DEPENDS ${PROJECT_NAME}
+            COMMENT "Packaging ${TARGET_NAME} for distribution"
+            VERBATIM
+        )
+    else()
+        # Binary-only release (libs-only)
+        add_custom_target(${TARGET_NAME}
+            # Create temp directory for packaging
+            COMMAND ${CMAKE_COMMAND} -E rm -rf "${CMAKE_BINARY_DIR}/${TARGET_NAME}-temp"
+            COMMAND ${CMAKE_COMMAND} -E make_directory "${CMAKE_BINARY_DIR}/${TARGET_NAME}-temp/bin"
+
+            # Copy binary (macOS: entire framework bundle, others: library file)
+            COMMAND ${CMAKE_COMMAND} -E
+                $<IF:$<STREQUAL:${GODOT_PLATFORM},macos>,copy_directory,copy>
+                "$<IF:$<STREQUAL:${GODOT_PLATFORM},macos>,$<TARGET_BUNDLE_DIR:${PROJECT_NAME}>,$<TARGET_FILE:${PROJECT_NAME}>>"
+                "${CMAKE_BINARY_DIR}/${TARGET_NAME}-temp/bin/$<TARGET_FILE_NAME:${PROJECT_NAME}>"
+
+            # Copy inklecate if available (optional)
+            COMMAND ${CMAKE_COMMAND} -E copy_if_different
+                "${CMAKE_SOURCE_DIR}/bin/${INKLECATE_EXECUTABLE}"
+                "${CMAKE_BINARY_DIR}/${TARGET_NAME}-temp/bin/${INKLECATE_EXECUTABLE}" || true
+
+            # Create output directory
+            COMMAND ${CMAKE_COMMAND} -E make_directory "${CMAKE_SOURCE_DIR}/release"
+
+            # Create zip archive
+            COMMAND ${CMAKE_COMMAND} -E chdir "${CMAKE_BINARY_DIR}/${TARGET_NAME}-temp"
+                ${CMAKE_COMMAND} -E tar "cf"
+                "${CMAKE_SOURCE_DIR}/release/${OUTPUT_PREFIX}-${PROJECT_VERSION}-godot${GODOT_VERSION}-${GODOT_PLATFORM}$<$<NOT:$<STREQUAL:${GODOT_PLATFORM},macos>>:-${GODOT_ARCH}>.zip"
+                --format=zip
+                .
+
+            # Cleanup temp directory
+            COMMAND ${CMAKE_COMMAND} -E rm -rf "${CMAKE_BINARY_DIR}/${TARGET_NAME}-temp"
+
+            COMMAND ${CMAKE_COMMAND} -E echo "✅ Package created: release/${OUTPUT_PREFIX}-${PROJECT_VERSION}-godot${GODOT_VERSION}-${GODOT_PLATFORM}.zip"
+
+            DEPENDS ${PROJECT_NAME}
+            COMMENT "Packaging ${TARGET_NAME} for distribution"
+            VERBATIM
+        )
+    endif()
+endfunction()
+
+# Create both targets
+create_release_target(release TRUE "godot-ink")
+create_release_target(release-libs FALSE "godot-ink-libs")
 
 # ==============================================================================
 # Compiler Flags
