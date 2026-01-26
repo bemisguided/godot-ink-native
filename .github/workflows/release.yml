@@ -1,0 +1,171 @@
+name: Release Build
+
+# Trigger on version tags
+on:
+  push:
+    tags:
+      - 'v*'  # v0.2.0, v1.0.0-beta1, etc.
+
+# Only one release workflow at a time
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  # ============================================================================
+  # Build Job: Compile binaries for each platform × Godot version
+  # ============================================================================
+  build:
+    name: Build ${{ matrix.platform }} - Godot ${{ matrix.godot-version }}
+    runs-on: ${{ matrix.os }}
+
+    strategy:
+      fail-fast: false  # Continue other builds if one fails
+      matrix:
+        godot-version: ['4.4', '4.5']
+        include:
+          - os: macos-latest
+            platform: macos
+            arch: "arm64;x86_64"
+          # Future: Add Windows and Linux
+          # - os: windows-latest
+          #   platform: windows
+          #   arch: "x86_64"
+          # - os: ubuntu-latest
+          #   platform: linux
+          #   arch: "x86_64"
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+          fetch-depth: 0  # Full history for tag info
+
+      - name: Setup CMake
+        uses: jwlawson/actions-setup-cmake@v2
+        with:
+          cmake-version: '3.21'
+
+      - name: Extract version from tag
+        id: version
+        run: |
+          # Remove 'refs/tags/v' prefix
+          VERSION=${GITHUB_REF#refs/tags/v}
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          echo "Version: $VERSION"
+
+      - name: Build extension
+        run: |
+          ./scripts/target-build.sh ${{ matrix.godot-version }} Release --clean
+        env:
+          CMAKE_OSX_ARCHITECTURES: ${{ matrix.arch }}
+
+      - name: Create libs package
+        run: |
+          ./scripts/target-package-libs.sh ${{ matrix.godot-version }}
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: libs-${{ matrix.platform }}-godot${{ matrix.godot-version }}
+          path: release/godot-ink-libs-*.zip
+          retention-days: 1
+
+  # ============================================================================
+  # Bundle Job: Combine platform binaries per Godot version
+  # ============================================================================
+  bundle:
+    name: Bundle Godot ${{ matrix.godot-version }}
+    needs: build
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        godot-version: ['4.4', '4.5']
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Extract version from tag
+        id: version
+        run: |
+          VERSION=${GITHUB_REF#refs/tags/v}
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+
+      - name: Download all platform artifacts
+        uses: actions/download-artifact@v4
+        with:
+          pattern: libs-*-godot${{ matrix.godot-version }}
+          path: artifacts
+
+      - name: List downloaded artifacts
+        run: |
+          echo "Downloaded artifacts:"
+          find artifacts -name "*.zip" -type f
+
+      - name: Bundle multi-platform package
+        run: |
+          # Collect all platform zips for this Godot version
+          PLATFORM_ZIPS=$(find artifacts -name "godot-ink-libs-*-godot${{ matrix.godot-version }}-*.zip" -type f)
+
+          # Call bundling script
+          ./scripts/target-release.sh \
+            ${{ matrix.godot-version }} \
+            ${{ steps.version.outputs.version }} \
+            $PLATFORM_ZIPS
+
+      - name: Upload bundled package
+        uses: actions/upload-artifact@v4
+        with:
+          name: bundle-godot${{ matrix.godot-version }}
+          path: release/godot-ink-*.zip
+          retention-days: 1
+
+  # ============================================================================
+  # Release Job: Create GitHub Release with all bundles
+  # ============================================================================
+  release:
+    name: Create GitHub Release
+    needs: bundle
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write  # Required to create releases
+
+    steps:
+      - name: Extract version from tag
+        id: version
+        run: |
+          VERSION=${GITHUB_REF#refs/tags/v}
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+
+          # Check if pre-release (contains - for beta, rc, etc.)
+          if [[ "$VERSION" == *-* ]]; then
+            echo "prerelease=true" >> $GITHUB_OUTPUT
+          else
+            echo "prerelease=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Download all bundles
+        uses: actions/download-artifact@v4
+        with:
+          pattern: bundle-*
+          path: bundles
+
+      - name: List bundles
+        run: |
+          echo "Release bundles:"
+          find bundles -name "*.zip" -type f
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          name: v${{ steps.version.outputs.version }}
+          tag_name: ${{ github.ref }}
+          generate_release_notes: true
+          prerelease: ${{ steps.version.outputs.prerelease }}
+          files: |
+            bundles/**/godot-ink-*.zip

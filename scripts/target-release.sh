@@ -29,6 +29,104 @@ Output:
 EOF
 }
 
+detect_platforms() {
+    local platform_zips=("$@")
+    local platforms=()
+
+    for zip in "${platform_zips[@]}"; do
+        local basename=$(basename "$zip")
+        if [[ "$basename" =~ -macos\.zip$ ]]; then
+            platforms+=("macos")
+        elif [[ "$basename" =~ -windows-.*\.zip$ ]]; then
+            platforms+=("windows")
+        elif [[ "$basename" =~ -linux-.*\.zip$ ]]; then
+            platforms+=("linux")
+        fi
+    done
+
+    echo "${platforms[@]}"
+}
+
+generate_gdextension() {
+    local godot_version="$1"
+    local output_file="$2"
+    shift 2
+    local platforms=("$@")
+
+    log_info "Generating .gdextension file for platforms: ${platforms[*]}"
+
+    # Read template
+    local template_file="addon/gd-ink-native.gdextension.in"
+    if [ ! -f "$template_file" ]; then
+        log_error "Template file not found: $template_file"
+        exit 1
+    fi
+
+    # Build platform filter regex for awk
+    local platform_regex=""
+    for p in "${platforms[@]}"; do
+        if [ -z "$platform_regex" ]; then
+            platform_regex="$p"
+        else
+            platform_regex="$platform_regex|$p"
+        fi
+    done
+
+    # Use awk to filter platform sections
+    awk -v platforms="$platform_regex" '
+    BEGIN { in_section = 0; in_libraries = 0 }
+
+    # Print everything before [libraries] section
+    !in_libraries && /^\[libraries\]/ {
+        print
+        in_libraries = 1
+        next
+    }
+
+    !in_libraries {
+        print
+        next
+    }
+
+    # In [libraries] section - detect platform headers
+    /^[[:space:]]*;[[:space:]]*(Windows|Linux|macOS)/ {
+        platform = tolower($0)
+        gsub(/^[[:space:]]*;[[:space:]]*/, "", platform)
+        gsub(/[[:space:]]*$/, "", platform)
+
+        # Check if this platform should be included
+        if (match(tolower(platform), platforms)) {
+            in_section = 1
+            print
+        } else {
+            in_section = 0
+        }
+        next
+    }
+
+    # In a platform section - print all lines including empty ones
+    in_section && /^[[:space:]]*$/ {
+        print
+        in_section = 0
+        next
+    }
+
+    # In a platform section - print config lines
+    in_section {
+        print
+    }
+    ' "$template_file" > "$output_file"
+
+    # Substitute version variable
+    if [[ "$OSTYPE" == "darwin"* ]]; then
+        sed -i '' "s/@GODOT_VERSION@/$godot_version/g" "$output_file"
+    else
+        sed -i "s/@GODOT_VERSION@/$godot_version/g" "$output_file"
+    fi
+
+    log_info "Generated .gdextension file: $output_file"
+}
+
 bundle_release() {
     local godot_version="$1"
     local version="$2"
@@ -56,15 +154,9 @@ bundle_release() {
     log_info "Copying addon wrapper files..."
     cp -r addon/* "$addon_dir/"
 
-    # Copy configured .gdextension file
-    local build_dir="build/${godot_version}"
-    if [ -f "$build_dir/gd-ink-native.gdextension" ]; then
-        cp "$build_dir/gd-ink-native.gdextension" "$addon_dir/"
-    else
-        log_error "No configured .gdextension file found in $build_dir"
-        log_error "Run './scripts/target-build.sh ${godot_version}' first"
-        exit 1
-    fi
+    # Generate .gdextension file based on available platforms
+    local platforms=($(detect_platforms "${platform_zips[@]}"))
+    generate_gdextension "$godot_version" "$addon_dir/gd-ink-native.gdextension" "${platforms[@]}"
 
     # Remove .in template if present
     rm -f "$addon_dir/gd-ink-native.gdextension.in"
