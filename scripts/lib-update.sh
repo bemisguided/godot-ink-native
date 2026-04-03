@@ -93,6 +93,9 @@ fi
 PROJECT_ROOT="$(get_project_root)"
 cd "$PROJECT_ROOT"
 
+log_info "Running: git submodule update --init --recursive"
+git submodule update --init --recursive
+
 TARGET="${1:-all}"
 
 # Validate target
@@ -121,8 +124,6 @@ case "$TARGET" in
         echo ""
         update_ink
         echo ""
-        log_info "Running: git submodule update --init --recursive"
-        git submodule update --init --recursive
         log_success "All submodules updated"
         ;;
 esac
